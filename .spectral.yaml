@@ -1,0 +1,70 @@
+# Spectral ruleset — enforced in CI. The build fails on any warning or error.
+# Docs: https://docs.stoplight.io/docs/spectral/
+extends:
+  - spectral:oas
+
+rules:
+  # --- Baseline OpenAPI rules we tighten to "error" ---------------------------
+  operation-operationId: error
+  operation-operationId-unique: error
+  operation-description: error
+  operation-tags: error
+  operation-tag-defined: error
+  oas3-unused-component: error
+  no-$ref-siblings: error
+  info-contact: error
+  info-description: error
+  info-license: error
+  oas3-server-not-example.com: error
+  path-params: error
+
+  # --- Custom rules ------------------------------------------------------------
+  operation-summary-required:
+    description: Every operation needs a short summary; it becomes the heading in the reference.
+    severity: error
+    given: $.paths[*][get,post,put,patch,delete]
+    then:
+      field: summary
+      function: truthy
+
+  operation-must-document-401:
+    description: Every authenticated operation must document the 401 response.
+    severity: error
+    given: $.paths[*][get,post,put,patch,delete].responses
+    then:
+      field: '401'
+      function: truthy
+
+  operation-4xx-uses-problem-json:
+    description: Error responses must use application/problem+json (RFC 9457).
+    severity: error
+    given: $.paths[*][*].responses[?(@property.match(/^4\d\d$/))].content
+    then:
+      field: application/problem+json
+      function: truthy
+
+  request-body-has-example:
+    description: Every request body should ship a copy-pasteable example.
+    severity: warn
+    given: $.paths[*][post,put,patch].requestBody.content.application/json
+    then:
+      field: examples
+      function: truthy
+
+  schema-properties-snake-case:
+    description: JSON property names are snake_case.
+    severity: error
+    given: $.components.schemas[*].properties[*]~
+    then:
+      function: casing
+      functionOptions:
+        type: snake
+
+  operation-id-camel-case:
+    description: operationIds are camelCase; SDK generators turn them into method names.
+    severity: error
+    given: $.paths[*][*].operationId
+    then:
+      function: casing
+      functionOptions:
+        type: camel

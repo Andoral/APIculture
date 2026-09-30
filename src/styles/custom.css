@@ -1,0 +1,12 @@
+/* Brand accent for Starlight. Generated with https://starlight.astro.build/guides/css-and-tailwind/#theming */
+:root {
+	--sl-color-accent-low: #3a2a00;
+	--sl-color-accent: #b07a00;
+	--sl-color-accent-high: #f3d38a;
+}
+
+:root[data-theme='light'] {
+	--sl-color-accent-low: #fbe9b8;
+	--sl-color-accent: #8a5f00;
+	--sl-color-accent-high: #3f2b00;
+}

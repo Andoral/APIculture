@@ -1,0 +1,110 @@
+name: Docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # 1. Quality gate: the OpenAPI document must pass the Spectral ruleset and the
+  #    site must build. Runs on every PR and on main.
+  check:
+    name: Lint OpenAPI & build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Lint OpenAPI document
+        run: npm run lint:openapi
+      - name: Type-check
+        run: npm run check
+      - name: Build (GitHub Pages layout)
+        run: npx astro build
+        env:
+          ASTRO_SITE: https://${{ github.repository_owner }}.github.io
+          ASTRO_BASE: /${{ github.event.repository.name }}
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  # 2. Production: publish main to GitHub Pages.
+  #    One-time setup: repository Settings → Pages → Source: "GitHub Actions".
+  deploy:
+    name: Deploy to GitHub Pages
+    if: github.event_name != 'pull_request'
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  # 3. PR previews: every pull request gets its own URL on Cloudflare Pages so
+  #    reviewers can read the docs as a reader would.
+  #    One-time setup:
+  #      - create a Cloudflare Pages project (direct upload, no git integration);
+  #      - repository variable  CF_PAGES_PROJECT = <project name>;
+  #      - repository secrets   CLOUDFLARE_API_TOKEN (Pages:Edit), CLOUDFLARE_ACCOUNT_ID.
+  #    The job is skipped until the variable is set, so forks and fresh clones stay green.
+  preview:
+    name: PR preview (Cloudflare Pages)
+    if: github.event_name == 'pull_request' && vars.CF_PAGES_PROJECT != ''
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build (root layout)
+        run: npx astro build
+        env:
+          ASTRO_SITE: https://${{ vars.CF_PAGES_PROJECT }}.pages.dev
+          ASTRO_BASE: /
+      - name: Deploy preview
+        id: deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${{ vars.CF_PAGES_PROJECT }} --branch=pr-${{ github.event.number }}
+      - name: Comment preview URL
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = `${{ steps.deploy.outputs.deployment-url }}`;
+            const marker = '<!-- docs-preview -->';
+            const body = `${marker}\n📖 Docs preview for this PR: ${url}\n\nAPI reference: ${url}/reference/v1/`;
+            const { data: comments } = await github.rest.issues.listComments({
+              ...context.repo, issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body?.startsWith(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ ...context.repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body });
+            }

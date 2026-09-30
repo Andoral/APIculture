@@ -1,0 +1,54 @@
+---
+title: APIculture API
+description: Manage apiaries, hives and inspections from your own application.
+template: splash
+hero:
+  tagline: A REST API for apiaries, hives and inspections. Predictable JSON, cursor pagination, idempotent writes, signed webhooks.
+  actions:
+    - text: Quickstart
+      link: /getting-started/quickstart/
+      icon: right-arrow
+    - text: API Reference
+      link: /reference/v1/
+      icon: open-book
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+<CardGrid stagger>
+	<Card title="Make your first request" icon="rocket">
+		Get an API key, call `GET /apiaries`, and read the response — in under five minutes.
+		[Start the quickstart →](/getting-started/quickstart/)
+	</Card>
+	<Card title="Authenticate" icon="seti:lock">
+		Bearer API keys, sandbox vs. live keys, rotation and scopes.
+		[Authentication →](/getting-started/authentication/)
+	</Card>
+	<Card title="Browse the reference" icon="open-book">
+		Every endpoint with parameters, schemas, copy-pasteable examples and a built-in request client.
+		[API Reference v1 →](/reference/v1/)
+	</Card>
+	<Card title="Handle errors and limits" icon="warning">
+		One error format (RFC 9457), stable error codes, rate limits and retry guidance.
+		[Errors →](/resources/errors/)
+	</Card>
+</CardGrid>
+
+## What's in this documentation
+
+<CardGrid>
+	<LinkCard title="Guides" href="/guides/pagination/" description="Task-oriented recipes: pagination, idempotency, webhooks, retries." />
+	<LinkCard title="Concepts" href="/concepts/data-model/" description="How the domain fits together: apiaries, hives, inspections and their lifecycle." />
+	<LinkCard title="Versioning" href="/resources/versioning/" description="How the API evolves, what counts as breaking, and how deprecations are announced." />
+	<LinkCard title="Changelog" href="/changelog/" description="Every change to the API, dated and tagged." />
+</CardGrid>
+
+## Base URLs
+
+| Environment | Base URL | Keys |
+| --- | --- | --- |
+| Production | `https://api.apiculture.example/v1` | `ak_live_…` |
+| Sandbox | `https://sandbox.api.apiculture.example/v1` | `ak_test_…` |
+
+The sandbox has the same surface as production, uses isolated test data, and never sends real notifications.

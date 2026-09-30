@@ -1,0 +1,753 @@
+openapi: 3.1.0
+info:
+  title: APIculture API
+  version: 1.0.0
+  summary: Manage apiaries, hives and inspections.
+  description: |
+    The APIculture API lets third-party applications manage apiaries, hives and
+    hive inspections on behalf of a beekeeper.
+
+    This document is the **single source of truth** for the API surface. The
+    reference section of the documentation site is rendered from it directly,
+    and SDKs are generated from it.
+
+    ## Conventions
+
+    - All requests and responses use `application/json` with UTF-8 encoding.
+    - Timestamps are RFC 3339 strings in UTC (`2026-09-30T16:00:00Z`).
+    - Identifiers are opaque strings prefixed with the resource type (`hv_…`, `ap_…`).
+    - Errors follow [RFC 9457 Problem Details](https://www.rfc-editor.org/rfc/rfc9457).
+    - List endpoints are cursor-paginated; see the `Pagination` guide.
+  contact:
+    name: APIculture developer support
+    url: https://github.com/Andoral/APIculture/issues
+    email: api@apiculture.example
+  license:
+    name: Apache 2.0
+    identifier: Apache-2.0
+  termsOfService: https://apiculture.example/terms
+
+servers:
+  # Sandbox is listed first on purpose: it is the default target for "Test request"
+  # in the interactive reference, so nobody hits production by accident.
+  - url: https://sandbox.api.apiculture.example/v1
+    description: Sandbox (test data, no side effects outside the sandbox)
+  - url: https://api.apiculture.example/v1
+    description: Production
+
+tags:
+  - name: Apiaries
+    description: A physical location where hives are kept.
+  - name: Hives
+    description: An individual bee colony living in a hive box at an apiary.
+  - name: Inspections
+    description: A record of a beekeeper checking a hive.
+  - name: Webhook endpoints
+    description: Manage the HTTPS endpoints that receive event notifications. The events themselves are described in the Webhooks section below.
+
+security:
+  - bearerAuth: []
+
+paths:
+  /apiaries:
+    get:
+      tags: [Apiaries]
+      operationId: listApiaries
+      summary: List apiaries
+      description: Returns the apiaries visible to the authenticated account, newest first.
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of apiaries.
+          headers:
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/X-RateLimit-Remaining'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, next_cursor]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Apiary'
+                  next_cursor:
+                    $ref: '#/components/schemas/NextCursor'
+              examples:
+                default:
+                  value:
+                    data:
+                      - id: ap_01J8Z5N6K8Q2X3W4V5B6C7D8E9
+                        name: Orchard apiary
+                        location: { latitude: 55.7558, longitude: 37.6173 }
+                        hive_count: 12
+                        created_at: '2026-04-02T08:15:00Z'
+                    next_cursor: null
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    post:
+      tags: [Apiaries]
+      operationId: createApiary
+      summary: Create an apiary
+      description: Creates a new apiary. The request is idempotent when an `Idempotency-Key` header is provided.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiaryInput'
+            examples:
+              default:
+                value:
+                  name: Orchard apiary
+                  location: { latitude: 55.7558, longitude: 37.6173 }
+      responses:
+        '201':
+          description: The apiary was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Apiary'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /apiaries/{apiaryId}:
+    parameters:
+      - $ref: '#/components/parameters/ApiaryId'
+    get:
+      tags: [Apiaries]
+      operationId: getApiary
+      summary: Get an apiary
+      description: Returns a single apiary by its identifier.
+      responses:
+        '200':
+          description: The requested apiary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Apiary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Apiaries]
+      operationId: updateApiary
+      summary: Update an apiary
+      description: Partially updates an apiary. Only the provided fields are changed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiaryInput'
+            examples:
+              rename:
+                summary: Rename only
+                value:
+                  name: Orchard apiary (north field)
+      responses:
+        '200':
+          description: The updated apiary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Apiary'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+    delete:
+      tags: [Apiaries]
+      operationId: deleteApiary
+      summary: Delete an apiary
+      description: |
+        Deletes an apiary. Fails with `409` if the apiary still contains hives;
+        move or delete the hives first.
+      responses:
+        '204':
+          description: The apiary was deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /hives:
+    get:
+      tags: [Hives]
+      operationId: listHives
+      summary: List hives
+      description: Returns hives, optionally filtered by apiary or status.
+      parameters:
+        - name: apiary_id
+          in: query
+          description: Only return hives located at this apiary.
+          schema:
+            $ref: '#/components/schemas/ApiaryIdentifier'
+        - name: status
+          in: query
+          description: Only return hives with this status.
+          schema:
+            $ref: '#/components/schemas/HiveStatus'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of hives.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, next_cursor]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Hive'
+                  next_cursor:
+                    $ref: '#/components/schemas/NextCursor'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    post:
+      tags: [Hives]
+      operationId: createHive
+      summary: Create a hive
+      description: Registers a new hive at an existing apiary.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HiveInput'
+            examples:
+              default:
+                value:
+                  apiary_id: ap_01J8Z5N6K8Q2X3W4V5B6C7D8E9
+                  label: Hive 7
+                  queen_installed_at: '2026-05-10'
+      responses:
+        '201':
+          description: The hive was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Hive'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+
+  /hives/{hiveId}:
+    parameters:
+      - $ref: '#/components/parameters/HiveId'
+    get:
+      tags: [Hives]
+      operationId: getHive
+      summary: Get a hive
+      description: Returns a single hive by its identifier.
+      responses:
+        '200':
+          description: The requested hive.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Hive'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /hives/{hiveId}/inspections:
+    parameters:
+      - $ref: '#/components/parameters/HiveId'
+    get:
+      tags: [Inspections]
+      operationId: listInspections
+      summary: List inspections of a hive
+      description: Returns inspections for the hive, most recent first.
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of inspections.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, next_cursor]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Inspection'
+                  next_cursor:
+                    $ref: '#/components/schemas/NextCursor'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Inspections]
+      operationId: createInspection
+      summary: Record an inspection
+      description: |
+        Records a new inspection of the hive. Emits the `inspection.created`
+        webhook event.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InspectionInput'
+            examples:
+              default:
+                value:
+                  inspected_at: '2026-09-28T09:30:00Z'
+                  queen_seen: true
+                  brood_frames: 6
+                  temperament: calm
+                  notes: Added a second super.
+      responses:
+        '201':
+          description: The inspection was recorded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Inspection'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+
+  /webhooks:
+    get:
+      tags: [Webhook endpoints]
+      operationId: listWebhooks
+      summary: List webhook endpoints
+      description: Returns all webhook endpoints registered for the account.
+      responses:
+        '200':
+          description: The registered webhook endpoints.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WebhookEndpoint'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Webhook endpoints]
+      operationId: createWebhook
+      summary: Register a webhook endpoint
+      description: |
+        Registers an HTTPS endpoint to receive events. The response contains the
+        signing `secret` **only once**; store it securely.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookEndpointInput'
+            examples:
+              default:
+                value:
+                  url: https://example.com/hooks/apiculture
+                  events: [inspection.created, hive.status_changed]
+      responses:
+        '201':
+          description: The endpoint was registered.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEndpointCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+
+webhooks:
+  inspection.created:
+    post:
+      operationId: onInspectionCreated
+      summary: Inspection created
+      description: Sent when a new inspection is recorded for a hive.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookEvent'
+      responses:
+        '2XX':
+          description: Return any `2xx` status to acknowledge the event. Anything else is retried with exponential backoff for up to 24 hours.
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API key
+      description: |
+        Pass your API key in the `Authorization` header:
+
+        ```
+        Authorization: Bearer ak_live_…
+        ```
+
+        Keys prefixed `ak_test_` work only against the sandbox server.
+
+  parameters:
+    ApiaryId:
+      name: apiaryId
+      in: path
+      required: true
+      description: Identifier of the apiary.
+      schema:
+        $ref: '#/components/schemas/ApiaryIdentifier'
+    HiveId:
+      name: hiveId
+      in: path
+      required: true
+      description: Identifier of the hive.
+      schema:
+        $ref: '#/components/schemas/HiveIdentifier'
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of items to return per page.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    Cursor:
+      name: cursor
+      in: query
+      description: Opaque cursor from the `next_cursor` field of the previous page.
+      schema:
+        type: string
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      description: |
+        A unique key (UUID recommended) that makes the request safe to retry.
+        Repeating a request with the same key within 24 hours returns the original response.
+      schema:
+        type: string
+        maxLength: 255
+
+  headers:
+    X-RateLimit-Remaining:
+      description: Number of requests remaining in the current rate-limit window.
+      schema:
+        type: integer
+
+  responses:
+    BadRequest:
+      description: The request is malformed (invalid JSON, wrong types).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Unauthorized:
+      description: The API key is missing, invalid or revoked.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: The resource does not exist or is not visible to this account.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Conflict:
+      description: The request conflicts with the current state of the resource.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ValidationFailed:
+      description: The request is well-formed but violates a business rule.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          examples:
+            default:
+              value:
+                type: https://docs.apiculture.example/resources/errors#validation_failed
+                title: Validation failed
+                status: 422
+                detail: '`brood_frames` must be between 0 and 20.'
+                instance: /hives/hv_01J8Z5P2M3N4B5V6C7X8Z9A0S1/inspections
+                code: validation_failed
+                errors:
+                  - field: brood_frames
+                    message: must be between 0 and 20
+    TooManyRequests:
+      description: The rate limit was exceeded. Retry after the number of seconds in `Retry-After`.
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            type: integer
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+  schemas:
+    ApiaryIdentifier:
+      type: string
+      pattern: '^ap_[0-9A-HJKMNP-TV-Z]{26}$'
+      description: Apiary identifier (`ap_` + ULID).
+      examples: [ap_01J8Z5N6K8Q2X3W4V5B6C7D8E9]
+    HiveIdentifier:
+      type: string
+      pattern: '^hv_[0-9A-HJKMNP-TV-Z]{26}$'
+      description: Hive identifier (`hv_` + ULID).
+      examples: [hv_01J8Z5P2M3N4B5V6C7X8Z9A0S1]
+    NextCursor:
+      type: [string, 'null']
+      description: Cursor for the next page, or `null` when there are no more items.
+
+    GeoPoint:
+      type: object
+      required: [latitude, longitude]
+      properties:
+        latitude:
+          type: number
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          minimum: -180
+          maximum: 180
+
+    ApiaryInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+          description: Human-readable name shown in the beekeeper's app.
+        location:
+          $ref: '#/components/schemas/GeoPoint'
+    Apiary:
+      allOf:
+        - $ref: '#/components/schemas/ApiaryInput'
+        - type: object
+          required: [id, hive_count, created_at]
+          properties:
+            id:
+              $ref: '#/components/schemas/ApiaryIdentifier'
+            hive_count:
+              type: integer
+              minimum: 0
+              description: Number of hives currently located at this apiary.
+            created_at:
+              type: string
+              format: date-time
+
+    HiveStatus:
+      type: string
+      description: Lifecycle state of the colony. See the `Hive lifecycle` concept page.
+      enum: [active, swarmed, queenless, dead, archived]
+    HiveInput:
+      type: object
+      required: [apiary_id, label]
+      properties:
+        apiary_id:
+          $ref: '#/components/schemas/ApiaryIdentifier'
+        label:
+          type: string
+          minLength: 1
+          maxLength: 60
+          description: Short label painted on the hive box, unique within the apiary.
+        queen_installed_at:
+          type: string
+          format: date
+          description: Date the current queen was introduced.
+    Hive:
+      allOf:
+        - $ref: '#/components/schemas/HiveInput'
+        - type: object
+          required: [id, status, created_at, updated_at]
+          properties:
+            id:
+              $ref: '#/components/schemas/HiveIdentifier'
+            status:
+              $ref: '#/components/schemas/HiveStatus'
+            last_inspected_at:
+              type: [string, 'null']
+              format: date-time
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+
+    InspectionInput:
+      type: object
+      required: [inspected_at]
+      properties:
+        inspected_at:
+          type: string
+          format: date-time
+        queen_seen:
+          type: boolean
+          default: false
+        brood_frames:
+          type: integer
+          minimum: 0
+          maximum: 20
+          description: Number of frames containing brood.
+        temperament:
+          type: string
+          enum: [calm, nervous, aggressive]
+        notes:
+          type: string
+          maxLength: 2000
+    Inspection:
+      allOf:
+        - $ref: '#/components/schemas/InspectionInput'
+        - type: object
+          required: [id, hive_id, created_at]
+          properties:
+            id:
+              type: string
+              pattern: '^in_[0-9A-HJKMNP-TV-Z]{26}$'
+            hive_id:
+              $ref: '#/components/schemas/HiveIdentifier'
+            created_at:
+              type: string
+              format: date-time
+
+    WebhookEventType:
+      type: string
+      enum: [inspection.created, hive.status_changed, apiary.deleted]
+    WebhookEndpointInput:
+      type: object
+      required: [url, events]
+      properties:
+        url:
+          type: string
+          format: uri
+          description: Must use `https://`.
+        events:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/WebhookEventType'
+    WebhookEndpoint:
+      allOf:
+        - $ref: '#/components/schemas/WebhookEndpointInput'
+        - type: object
+          required: [id, created_at]
+          properties:
+            id:
+              type: string
+              pattern: '^wh_[0-9A-HJKMNP-TV-Z]{26}$'
+            created_at:
+              type: string
+              format: date-time
+    WebhookEndpointCreated:
+      allOf:
+        - $ref: '#/components/schemas/WebhookEndpoint'
+        - type: object
+          required: [secret]
+          properties:
+            secret:
+              type: string
+              description: HMAC-SHA256 signing secret. Returned only in this response.
+    WebhookEvent:
+      type: object
+      required: [id, type, created_at, data]
+      properties:
+        id:
+          type: string
+          description: Unique event id; use it for de-duplication.
+        type:
+          $ref: '#/components/schemas/WebhookEventType'
+        created_at:
+          type: string
+          format: date-time
+        data:
+          type: object
+          description: The resource the event is about (e.g. an `Inspection`).
+          additionalProperties: true
+
+    Problem:
+      type: object
+      description: Error body per RFC 9457.
+      required: [type, title, status, code]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: Link to the human-readable description of this error class.
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        code:
+          type: string
+          description: Stable machine-readable code. See the Errors page for the full list.
+        errors:
+          type: array
+          description: Per-field details for `validation_failed`.
+          items:
+            type: object
+            required: [field, message]
+            properties:
+              field:
+                type: string
+              message:
+                type: string
