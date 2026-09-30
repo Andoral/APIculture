@@ -20,8 +20,10 @@ export default defineConfig({
 	},
 	integrations: [
 		starlight({
-			title: 'APIculture API',
-			description: 'Developer documentation for the APIculture API.',
+			title: 'APIculture',
+			description: 'Developer documentation for APIculture.',
+			favicon: '/favicon.svg',
+			logo: { src: './src/assets/honeycomb.svg', alt: 'APIculture honeycomb' },
 			social: [
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/Andoral/APIculture' },
 			],
@@ -34,7 +36,7 @@ export default defineConfig({
 				{
 					label: 'Getting Started',
 					items: [
-						{ label: 'Introduction', slug: '' },
+						{ label: 'Architecture & concepts', slug: '' },
 						{ label: 'Quickstart', slug: 'getting-started/quickstart' },
 						{ label: 'Authentication', slug: 'getting-started/authentication' },
 					],
@@ -42,10 +44,6 @@ export default defineConfig({
 				{
 					label: 'Guides',
 					items: [{ autogenerate: { directory: 'guides' } }],
-				},
-				{
-					label: 'Concepts',
-					items: [{ autogenerate: { directory: 'concepts' } }],
 				},
 				{
 					label: 'API Reference',

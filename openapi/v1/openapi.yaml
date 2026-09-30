@@ -1,10 +1,10 @@
 openapi: 3.1.0
 info:
-  title: APIculture API
+  title: APIculture
   version: 1.0.0
   summary: Manage apiaries, hives and inspections.
   description: |
-    The APIculture API lets third-party applications manage apiaries, hives and
+    APIculture lets third-party applications manage apiaries, hives and
     hive inspections on behalf of a beekeeper.
 
     This document is the **single source of truth** for the API surface. The
@@ -592,7 +592,7 @@ components:
 
     HiveStatus:
       type: string
-      description: Lifecycle state of the colony. See the `Hive lifecycle` concept page.
+      description: Lifecycle state of the colony. See Hive lifecycle on the Architecture & concepts page.
       enum: [active, swarmed, queenless, dead, archived]
     HiveInput:
       type: object

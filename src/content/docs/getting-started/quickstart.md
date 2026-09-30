@@ -70,4 +70,4 @@ curl https://sandbox.api.apiculture.example/v1/apiaries/ap_01J8Z5N6K8Q2X3W4V5B6C
 - Add hives and record inspections — see the [API Reference](/reference/v1/).
 - Page through long lists with [Pagination](/guides/pagination/).
 - Get notified about changes with [Webhooks](/guides/webhooks/).
-- Understand how the pieces fit together in the [Data model](/concepts/data-model/).
+- Understand how the pieces fit together in [Architecture & concepts](/).

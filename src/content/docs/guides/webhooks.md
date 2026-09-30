@@ -12,7 +12,7 @@ Instead of polling, register an HTTPS endpoint and APIculture will `POST` an eve
 | Type | When |
 | --- | --- |
 | `inspection.created` | An inspection was recorded for a hive. |
-| `hive.status_changed` | A hive moved to a new [lifecycle status](/concepts/hive-lifecycle/). |
+| `hive.status_changed` | A hive moved to a new [lifecycle status](/#hive-lifecycle). |
 | `apiary.deleted` | An apiary was deleted. |
 
 ## Registering an endpoint

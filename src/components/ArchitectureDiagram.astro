@@ -1,0 +1,126 @@
+---
+/**
+ * Typical client–server flow for APIculture: the integrator's backend talks
+ * HTTPS to the API; the API persists state and pushes signed webhooks back.
+ */
+---
+
+<figure class="arch">
+	<svg
+		class="arch__svg"
+		viewBox="0 0 920 280"
+		role="img"
+		aria-labelledby="arch-title arch-desc"
+	>
+		<title id="arch-title">Client–server architecture</title>
+		<desc id="arch-desc">
+			Your application sends HTTPS JSON requests with a Bearer token to the
+			APIculture API. The API reads and writes a data store, then returns a JSON
+			response. When something changes, the API POSTs a signed webhook to your
+			endpoint.
+		</desc>
+
+		<defs>
+			<marker id="arch-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+				<path d="M 0 1.5 L 9 5 L 0 8.5 z" class="arch__arrowhead" />
+			</marker>
+		</defs>
+
+		<!-- Client -->
+		<rect class="arch__box" x="24" y="48" width="200" height="120" rx="14" />
+		<text class="arch__kicker" x="124" y="82" text-anchor="middle">Client</text>
+		<text class="arch__label" x="124" y="112" text-anchor="middle">Your application</text>
+		<text class="arch__sub" x="124" y="136" text-anchor="middle">backend / SDK</text>
+
+		<!-- Server -->
+		<rect class="arch__box arch__box--accent" x="360" y="48" width="200" height="120" rx="14" />
+		<text class="arch__kicker" x="460" y="82" text-anchor="middle">Server</text>
+		<text class="arch__label" x="460" y="112" text-anchor="middle">APIculture API</text>
+		<text class="arch__sub" x="460" y="136" text-anchor="middle">HTTPS · REST · JSON</text>
+
+		<!-- Data store -->
+		<rect class="arch__box" x="696" y="48" width="200" height="120" rx="14" />
+		<text class="arch__kicker" x="796" y="82" text-anchor="middle">Data store</text>
+		<text class="arch__label" x="796" y="112" text-anchor="middle">Apiaries · Hives</text>
+		<text class="arch__sub" x="796" y="136" text-anchor="middle">Inspections</text>
+
+		<!-- Request / response arrows -->
+		<line class="arch__line" x1="224" y1="86" x2="360" y2="86" marker-end="url(#arch-arrow)" />
+		<text class="arch__caption" x="292" y="74" text-anchor="middle">HTTPS request</text>
+		<line class="arch__line" x1="360" y1="128" x2="224" y2="128" marker-end="url(#arch-arrow)" />
+		<text class="arch__caption" x="292" y="154" text-anchor="middle">JSON response</text>
+
+		<line class="arch__line" x1="560" y1="86" x2="696" y2="86" marker-end="url(#arch-arrow)" />
+		<text class="arch__caption" x="628" y="74" text-anchor="middle">read / write</text>
+		<line class="arch__line" x1="696" y1="128" x2="560" y2="128" marker-end="url(#arch-arrow)" />
+		<text class="arch__caption" x="628" y="154" text-anchor="middle">persisted state</text>
+
+		<!-- Webhook loop -->
+		<path class="arch__line" d="M 400 168 L 400 214 L 124 214 L 124 168" marker-end="url(#arch-arrow)" fill="none" />
+		<text class="arch__caption" x="262" y="238" text-anchor="middle">signed webhook POST → your endpoint</text>
+	</svg>
+	<figcaption class="arch__figcaption">
+		Typical client–server: your backend is the client, APIculture is the server. Browsers and mobile apps must not hold an API key.
+	</figcaption>
+</figure>
+
+<style>
+	.arch {
+		margin: 1.25rem 0 0.25rem;
+	}
+	.arch__svg {
+		display: block;
+		width: 100%;
+		height: auto;
+		overflow: visible;
+	}
+	.arch__box {
+		fill: var(--sl-color-gray-6);
+		stroke: var(--sl-color-gray-4);
+		stroke-width: 1.5;
+	}
+	.arch__box--accent {
+		fill: var(--sl-color-accent-low);
+		stroke: var(--sl-color-accent);
+	}
+	.arch__kicker {
+		fill: var(--sl-color-accent-high);
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+	}
+	.arch__label {
+		fill: var(--sl-color-white);
+		font-size: 16px;
+		font-weight: 650;
+	}
+	.arch__sub {
+		fill: var(--sl-color-gray-2);
+		font-size: 12px;
+	}
+	.arch__caption {
+		fill: var(--sl-color-gray-2);
+		font-size: 11px;
+	}
+	.arch__line {
+		stroke: var(--sl-color-gray-3);
+		stroke-width: 1.75;
+	}
+	.arch__arrowhead {
+		fill: var(--sl-color-gray-3);
+	}
+	.arch__figcaption {
+		margin-top: 0.6rem;
+		color: var(--sl-color-gray-2);
+		font-size: var(--sl-text-sm);
+	}
+
+	:root[data-theme='light'] .arch__box {
+		fill: var(--sl-color-gray-7);
+		stroke: var(--sl-color-gray-4);
+	}
+	:root[data-theme='light'] .arch__label {
+		fill: var(--sl-color-gray-1);
+	}
+</style>

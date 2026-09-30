@@ -11,7 +11,10 @@
  * @param {{ base: string, components?: string[] }} options
  * @returns {import('satteri').HastPluginDefinition}
  */
-export default function satteriBaseLinks({ base, components = ['Card', 'LinkCard'] }) {
+export default function satteriBaseLinks({
+	base,
+	components = ['Card', 'LinkCard', 'LinkButton'],
+}) {
 	const prefix = base.replace(/\/$/, '');
 
 	const rewrite = (href) =>

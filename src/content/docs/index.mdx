@@ -1,54 +1,115 @@
 ---
-title: APIculture API
-description: Manage apiaries, hives and inspections from your own application.
-template: splash
-hero:
-  tagline: A REST API for apiaries, hives and inspections. Predictable JSON, cursor pagination, idempotent writes, signed webhooks.
-  actions:
-    - text: Quickstart
-      link: /getting-started/quickstart/
-      icon: right-arrow
-    - text: API Reference
-      link: /reference/v1/
-      icon: open-book
-      variant: minimal
+title: Architecture & concepts
+description: 'How APIculture is structured: client–server architecture, the data model, and the hive lifecycle.'
 ---
 
-import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import ArchitectureDiagram from '../../components/ArchitectureDiagram.astro';
+import { LinkButton } from '@astrojs/starlight/components';
 
-<CardGrid stagger>
-	<Card title="Make your first request" icon="rocket">
-		Get an API key, call `GET /apiaries`, and read the response — in under five minutes.
-		[Start the quickstart →](/getting-started/quickstart/)
-	</Card>
-	<Card title="Authenticate" icon="seti:lock">
-		Bearer API keys, sandbox vs. live keys, rotation and scopes.
-		[Authentication →](/getting-started/authentication/)
-	</Card>
-	<Card title="Browse the reference" icon="open-book">
-		Every endpoint with parameters, schemas, copy-pasteable examples and a built-in request client.
-		[API Reference v1 →](/reference/v1/)
-	</Card>
-	<Card title="Handle errors and limits" icon="warning">
-		One error format (RFC 9457), stable error codes, rate limits and retry guidance.
-		[Errors →](/resources/errors/)
-	</Card>
-</CardGrid>
+APIculture is a REST API for apiaries, hives and inspections. Predictable JSON, cursor pagination, idempotent writes, signed webhooks.
 
-## What's in this documentation
+<LinkButton href="/getting-started/quickstart/" icon="right-arrow">Quickstart</LinkButton>
+<LinkButton href="/reference/v1/" variant="minimal" icon="open-book">API Reference</LinkButton>
 
-<CardGrid>
-	<LinkCard title="Guides" href="/guides/pagination/" description="Task-oriented recipes: pagination, idempotency, webhooks, retries." />
-	<LinkCard title="Concepts" href="/concepts/data-model/" description="How the domain fits together: apiaries, hives, inspections and their lifecycle." />
-	<LinkCard title="Versioning" href="/resources/versioning/" description="How the API evolves, what counts as breaking, and how deprecations are announced." />
-	<LinkCard title="Changelog" href="/changelog/" description="Every change to the API, dated and tagged." />
-</CardGrid>
+## Architecture
 
-## Base URLs
+A typical client–server setup. **Your application is the client**; **APIculture is the server**. The client never talks to the data store directly.
+
+<ArchitectureDiagram />
+
+| Piece | Role |
+| --- | --- |
+| **Client** | Your backend (or an SDK running on it). Holds the API key, signs requests, retries with `Idempotency-Key`. |
+| **Server** | The APIculture API at `/v1`. Authenticates the key, enforces rate limits, applies business rules, emits webhooks. |
+| **Data store** | Apiaries, hives and inspections owned by the account behind the key. Not reachable except through the API. |
+| **Webhook endpoint** | An HTTPS URL you register. The server `POST`s signed events here when state changes, so you do not poll. |
+
+### Request path
+
+1. The client sends `Authorization: Bearer ak_…` over HTTPS to the sandbox or production host.
+2. The server authenticates the key, applies the resource to the store, and returns JSON (or a [Problem Details](/resources/errors/) error).
+3. On a relevant change the server sends a signed `POST` to your webhook URL. See [Webhooks](/guides/webhooks/).
+
+Browsers and mobile apps must **not** hold a key — they would expose it. Call the API from your server. Details: [Authentication](/getting-started/authentication/).
+
+### Base URLs
 
 | Environment | Base URL | Keys |
 | --- | --- | --- |
-| Production | `https://api.apiculture.example/v1` | `ak_live_…` |
 | Sandbox | `https://sandbox.api.apiculture.example/v1` | `ak_test_…` |
+| Production | `https://api.apiculture.example/v1` | `ak_live_…` |
 
 The sandbox has the same surface as production, uses isolated test data, and never sends real notifications.
+
+## Data model
+
+The API is organised around three resources owned by an **account** (the beekeeper or organisation that owns the API key).
+
+```text
+Account
+├── Apiary (1..n)
+│   └── Hive (0..n)
+│       └── Inspection (0..n, append-only)
+└── Webhook endpoint (0..n)
+```
+
+| Resource | Identifier prefix | Description |
+| --- | --- | --- |
+| Apiary | `ap_` | A physical site with a name and optional coordinates. |
+| Hive | `hv_` | One colony in one hive box. Belongs to exactly one apiary and carries a [lifecycle status](#hive-lifecycle). |
+| Inspection | `in_` | An immutable record of a visit to a hive: queen seen, brood frames, temperament, notes. |
+| Webhook endpoint | `wh_` | An HTTPS URL that receives [events](/guides/webhooks/). |
+
+### Identifiers
+
+Identifiers are strings composed of a resource prefix and a 26-character [ULID](https://github.com/ulid/spec), e.g. `hv_01J8Z5P2M3N4B5V6C7X8Z9A0S1`. They are unique across all accounts, sort chronologically, and are safe to use as URL path segments. Do not rely on their length or format beyond the prefix.
+
+### Mutability
+
+- Apiaries and hives can be updated with `PATCH`.
+- Inspections are **append-only**. A mistaken inspection is corrected by recording a new one; the history is never rewritten.
+- Deleting an apiary is refused (`409`) while it still contains hives — move or delete the hives first.
+
+### Timestamps and dates
+
+- `*_at` fields are RFC 3339 timestamps in UTC with a `Z` suffix.
+- Date-only fields such as `queen_installed_at` use `YYYY-MM-DD` and have no time zone.
+- `created_at` is set by the server; `inspected_at` is supplied by you and may be in the past.
+
+## Hive lifecycle
+
+Every hive has a `status` field describing the state of the colony.
+
+| Status | Meaning |
+| --- | --- |
+| `active` | A healthy colony with a laying queen. The default for new hives. |
+| `queenless` | No queen was seen in recent inspections and no eggs are present. |
+| `swarmed` | Most of the colony left with the old queen. |
+| `dead` | The colony died. The hive box may be reused by creating a new hive. |
+| `archived` | Hidden from default lists. Terminal state. |
+
+### Transitions
+
+```text
+              ┌──────────────┐
+   create ──▶ │    active    │ ◀─────────────┐
+              └──────┬───────┘               │ new queen accepted
+        no queen /   │   \  colony left      │
+        no eggs      ▼    ▼                  │
+        ┌────────────┐  ┌────────────┐       │
+        │  queenless │  │  swarmed   │ ──────┘
+        └─────┬──────┘  └─────┬──────┘
+              │               │
+              ▼               ▼
+              ┌──────────────┐
+              │     dead     │
+              └──────┬───────┘
+                     ▼
+              ┌──────────────┐
+              │   archived   │
+              └──────────────┘
+```
+
+- Status changes are made by the beekeeper in the app or via `PATCH /hives/{hiveId}`; the API never changes a status on its own based on inspection data.
+- `archived` is terminal. Archived hives are excluded from `GET /hives` unless `status=archived` is passed explicitly.
+- Every change emits a `hive.status_changed` [webhook event](/guides/webhooks/) with the previous and new status in `data`.
