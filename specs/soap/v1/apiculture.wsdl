@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions
+  name="APIculture"
+  targetNamespace="https://api.apiculture.example/soap/v1"
+  xmlns="http://schemas.xmlsoap.org/wsdl/"
+  xmlns:tns="https://api.apiculture.example/soap/v1"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <documentation>
+    SOAP document/literal API for the same apiary / hive / inspection domain as REST.
+    Send the API key in HTTP header Authorization: Bearer ak_… (or WS-Security UsernameToken in production).
+  </documentation>
+
+  <types>
+    <xsd:schema targetNamespace="https://api.apiculture.example/soap/v1" elementFormDefault="qualified">
+      <xsd:complexType name="GeoPoint">
+        <xsd:sequence>
+          <xsd:element name="latitude" type="xsd:double"/>
+          <xsd:element name="longitude" type="xsd:double"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="Apiary">
+        <xsd:sequence>
+          <xsd:element name="id" type="xsd:string"/>
+          <xsd:element name="name" type="xsd:string"/>
+          <xsd:element name="location" type="tns:GeoPoint" minOccurs="0"/>
+          <xsd:element name="hiveCount" type="xsd:int"/>
+          <xsd:element name="createdAt" type="xsd:dateTime"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="Hive">
+        <xsd:sequence>
+          <xsd:element name="id" type="xsd:string"/>
+          <xsd:element name="apiaryId" type="xsd:string"/>
+          <xsd:element name="label" type="xsd:string"/>
+          <xsd:element name="status" type="xsd:string"/>
+          <xsd:element name="queenInstalledAt" type="xsd:date" minOccurs="0"/>
+          <xsd:element name="lastInspectedAt" type="xsd:dateTime" minOccurs="0"/>
+          <xsd:element name="createdAt" type="xsd:dateTime"/>
+          <xsd:element name="updatedAt" type="xsd:dateTime"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="Inspection">
+        <xsd:sequence>
+          <xsd:element name="id" type="xsd:string"/>
+          <xsd:element name="hiveId" type="xsd:string"/>
+          <xsd:element name="inspectedAt" type="xsd:dateTime"/>
+          <xsd:element name="queenSeen" type="xsd:boolean"/>
+          <xsd:element name="broodFrames" type="xsd:int" minOccurs="0"/>
+          <xsd:element name="temperament" type="xsd:string" minOccurs="0"/>
+          <xsd:element name="notes" type="xsd:string" minOccurs="0"/>
+          <xsd:element name="createdAt" type="xsd:dateTime"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="WebhookEndpoint">
+        <xsd:sequence>
+          <xsd:element name="id" type="xsd:string"/>
+          <xsd:element name="url" type="xsd:anyURI"/>
+          <xsd:element name="events" type="xsd:string" minOccurs="1" maxOccurs="unbounded"/>
+          <xsd:element name="createdAt" type="xsd:dateTime"/>
+          <xsd:element name="secret" type="xsd:string" minOccurs="0"/>
+        </xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:element name="ListApiaries"><xsd:complexType><xsd:sequence>
+        <xsd:element name="limit" type="xsd:int" minOccurs="0"/>
+        <xsd:element name="cursor" type="xsd:string" minOccurs="0"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+      <xsd:element name="ListApiariesResponse"><xsd:complexType><xsd:sequence>
+        <xsd:element name="apiary" type="tns:Apiary" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element name="nextCursor" type="xsd:string" minOccurs="0" nillable="true"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+
+      <xsd:element name="CreateApiary"><xsd:complexType><xsd:sequence>
+        <xsd:element name="name" type="xsd:string"/>
+        <xsd:element name="location" type="tns:GeoPoint" minOccurs="0"/>
+        <xsd:element name="idempotencyKey" type="xsd:string" minOccurs="0"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+      <xsd:element name="CreateApiaryResponse"><xsd:complexType><xsd:sequence>
+        <xsd:element name="apiary" type="tns:Apiary"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+
+      <xsd:element name="GetApiary"><xsd:complexType><xsd:sequence>
+        <xsd:element name="apiaryId" type="xsd:string"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+      <xsd:element name="GetApiaryResponse"><xsd:complexType><xsd:sequence>
+        <xsd:element name="apiary" type="tns:Apiary"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+
+      <xsd:element name="UpdateApiary"><xsd:complexType><xsd:sequence>
+        <xsd:element name="apiaryId" type="xsd:string"/>
+        <xsd:element name="name" type="xsd:string" minOccurs="0"/>
+        <xsd:element name="location" type="tns:GeoPoint" minOccurs="0"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+      <xsd:element name="UpdateApiaryResponse"><xsd:complexType><xsd:sequence>
+        <xsd:element name="apiary" type="tns:Apiary"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+
+      <xsd:element name="DeleteApiary"><xsd:complexType><xsd:sequence>
+        <xsd:element name="apiaryId" type="xsd:string"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+      <xsd:element name="DeleteApiaryResponse"><xsd:complexType><xsd:sequence/></xsd:complexType></xsd:element>
+
+      <xsd:element name="ListHives"><xsd:complexType><xsd:sequence>
+        <xsd:element name="apiaryId" type="xsd:string" minOccurs="0"/>
+        <xsd:element name="status" type="xsd:string" minOccurs="0"/>
+        <xsd:element name="limit" type="xsd:int" minOccurs="0"/>
+        <xsd:element name="cursor" type="xsd:string" minOccurs="0"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+      <xsd:element name="ListHivesResponse"><xsd:complexType><xsd:sequence>
+        <xsd:element name="hive" type="tns:Hive" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element name="nextCursor" type="xsd:string" minOccurs="0" nillable="true"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+
+      <xsd:element name="CreateHive"><xsd:complexType><xsd:sequence>
+        <xsd:element name="apiaryId" type="xsd:string"/>
+        <xsd:element name="label" type="xsd:string"/>
+        <xsd:element name="queenInstalledAt" type="xsd:date" minOccurs="0"/>
+        <xsd:element name="idempotencyKey" type="xsd:string" minOccurs="0"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+      <xsd:element name="CreateHiveResponse"><xsd:complexType><xsd:sequence>
+        <xsd:element name="hive" type="tns:Hive"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+
+      <xsd:element name="GetHive"><xsd:complexType><xsd:sequence>
+        <xsd:element name="hiveId" type="xsd:string"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+      <xsd:element name="GetHiveResponse"><xsd:complexType><xsd:sequence>
+        <xsd:element name="hive" type="tns:Hive"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+
+      <xsd:element name="ListInspections"><xsd:complexType><xsd:sequence>
+        <xsd:element name="hiveId" type="xsd:string"/>
+        <xsd:element name="limit" type="xsd:int" minOccurs="0"/>
+        <xsd:element name="cursor" type="xsd:string" minOccurs="0"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+      <xsd:element name="ListInspectionsResponse"><xsd:complexType><xsd:sequence>
+        <xsd:element name="inspection" type="tns:Inspection" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element name="nextCursor" type="xsd:string" minOccurs="0" nillable="true"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+
+      <xsd:element name="CreateInspection"><xsd:complexType><xsd:sequence>
+        <xsd:element name="hiveId" type="xsd:string"/>
+        <xsd:element name="inspectedAt" type="xsd:dateTime"/>
+        <xsd:element name="queenSeen" type="xsd:boolean" minOccurs="0"/>
+        <xsd:element name="broodFrames" type="xsd:int" minOccurs="0"/>
+        <xsd:element name="temperament" type="xsd:string" minOccurs="0"/>
+        <xsd:element name="notes" type="xsd:string" minOccurs="0"/>
+        <xsd:element name="idempotencyKey" type="xsd:string" minOccurs="0"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+      <xsd:element name="CreateInspectionResponse"><xsd:complexType><xsd:sequence>
+        <xsd:element name="inspection" type="tns:Inspection"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+
+      <xsd:element name="ListWebhooks"><xsd:complexType><xsd:sequence/></xsd:complexType></xsd:element>
+      <xsd:element name="ListWebhooksResponse"><xsd:complexType><xsd:sequence>
+        <xsd:element name="endpoint" type="tns:WebhookEndpoint" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+
+      <xsd:element name="CreateWebhook"><xsd:complexType><xsd:sequence>
+        <xsd:element name="url" type="xsd:anyURI"/>
+        <xsd:element name="events" type="xsd:string" minOccurs="1" maxOccurs="unbounded"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+      <xsd:element name="CreateWebhookResponse"><xsd:complexType><xsd:sequence>
+        <xsd:element name="endpoint" type="tns:WebhookEndpoint"/>
+      </xsd:sequence></xsd:complexType></xsd:element>
+
+      <xsd:element name="Fault">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="code" type="xsd:string"/>
+            <xsd:element name="detail" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </types>
+
+  <message name="ListApiariesInput"><part name="body" element="tns:ListApiaries"/></message>
+  <message name="ListApiariesOutput"><part name="body" element="tns:ListApiariesResponse"/></message>
+  <message name="CreateApiaryInput"><part name="body" element="tns:CreateApiary"/></message>
+  <message name="CreateApiaryOutput"><part name="body" element="tns:CreateApiaryResponse"/></message>
+  <message name="GetApiaryInput"><part name="body" element="tns:GetApiary"/></message>
+  <message name="GetApiaryOutput"><part name="body" element="tns:GetApiaryResponse"/></message>
+  <message name="UpdateApiaryInput"><part name="body" element="tns:UpdateApiary"/></message>
+  <message name="UpdateApiaryOutput"><part name="body" element="tns:UpdateApiaryResponse"/></message>
+  <message name="DeleteApiaryInput"><part name="body" element="tns:DeleteApiary"/></message>
+  <message name="DeleteApiaryOutput"><part name="body" element="tns:DeleteApiaryResponse"/></message>
+  <message name="ListHivesInput"><part name="body" element="tns:ListHives"/></message>
+  <message name="ListHivesOutput"><part name="body" element="tns:ListHivesResponse"/></message>
+  <message name="CreateHiveInput"><part name="body" element="tns:CreateHive"/></message>
+  <message name="CreateHiveOutput"><part name="body" element="tns:CreateHiveResponse"/></message>
+  <message name="GetHiveInput"><part name="body" element="tns:GetHive"/></message>
+  <message name="GetHiveOutput"><part name="body" element="tns:GetHiveResponse"/></message>
+  <message name="ListInspectionsInput"><part name="body" element="tns:ListInspections"/></message>
+  <message name="ListInspectionsOutput"><part name="body" element="tns:ListInspectionsResponse"/></message>
+  <message name="CreateInspectionInput"><part name="body" element="tns:CreateInspection"/></message>
+  <message name="CreateInspectionOutput"><part name="body" element="tns:CreateInspectionResponse"/></message>
+  <message name="ListWebhooksInput"><part name="body" element="tns:ListWebhooks"/></message>
+  <message name="ListWebhooksOutput"><part name="body" element="tns:ListWebhooksResponse"/></message>
+  <message name="CreateWebhookInput"><part name="body" element="tns:CreateWebhook"/></message>
+  <message name="CreateWebhookOutput"><part name="body" element="tns:CreateWebhookResponse"/></message>
+  <message name="FaultMessage"><part name="body" element="tns:Fault"/></message>
+
+  <portType name="APIculturePort">
+    <operation name="ListApiaries">
+      <documentation>Returns apiaries visible to the authenticated account, newest first.</documentation>
+      <input message="tns:ListApiariesInput"/><output message="tns:ListApiariesOutput"/><fault name="Fault" message="tns:FaultMessage"/>
+    </operation>
+    <operation name="CreateApiary">
+      <documentation>Creates a new apiary. Idempotent when idempotencyKey is set.</documentation>
+      <input message="tns:CreateApiaryInput"/><output message="tns:CreateApiaryOutput"/><fault name="Fault" message="tns:FaultMessage"/>
+    </operation>
+    <operation name="GetApiary">
+      <documentation>Returns a single apiary.</documentation>
+      <input message="tns:GetApiaryInput"/><output message="tns:GetApiaryOutput"/><fault name="Fault" message="tns:FaultMessage"/>
+    </operation>
+    <operation name="UpdateApiary">
+      <documentation>Partially updates an apiary.</documentation>
+      <input message="tns:UpdateApiaryInput"/><output message="tns:UpdateApiaryOutput"/><fault name="Fault" message="tns:FaultMessage"/>
+    </operation>
+    <operation name="DeleteApiary">
+      <documentation>Deletes an apiary. Fault apiary_not_empty if it still has hives.</documentation>
+      <input message="tns:DeleteApiaryInput"/><output message="tns:DeleteApiaryOutput"/><fault name="Fault" message="tns:FaultMessage"/>
+    </operation>
+    <operation name="ListHives">
+      <documentation>Returns hives, optionally filtered by apiary or status.</documentation>
+      <input message="tns:ListHivesInput"/><output message="tns:ListHivesOutput"/><fault name="Fault" message="tns:FaultMessage"/>
+    </operation>
+    <operation name="CreateHive">
+      <documentation>Registers a hive at an existing apiary.</documentation>
+      <input message="tns:CreateHiveInput"/><output message="tns:CreateHiveOutput"/><fault name="Fault" message="tns:FaultMessage"/>
+    </operation>
+    <operation name="GetHive">
+      <documentation>Returns a single hive.</documentation>
+      <input message="tns:GetHiveInput"/><output message="tns:GetHiveOutput"/><fault name="Fault" message="tns:FaultMessage"/>
+    </operation>
+    <operation name="ListInspections">
+      <documentation>Returns inspections for a hive, most recent first.</documentation>
+      <input message="tns:ListInspectionsInput"/><output message="tns:ListInspectionsOutput"/><fault name="Fault" message="tns:FaultMessage"/>
+    </operation>
+    <operation name="CreateInspection">
+      <documentation>Records an inspection. Emits inspection.created.</documentation>
+      <input message="tns:CreateInspectionInput"/><output message="tns:CreateInspectionOutput"/><fault name="Fault" message="tns:FaultMessage"/>
+    </operation>
+    <operation name="ListWebhooks">
+      <documentation>Returns webhook endpoints for the account.</documentation>
+      <input message="tns:ListWebhooksInput"/><output message="tns:ListWebhooksOutput"/><fault name="Fault" message="tns:FaultMessage"/>
+    </operation>
+    <operation name="CreateWebhook">
+      <documentation>Registers an HTTPS endpoint. secret is returned only once.</documentation>
+      <input message="tns:CreateWebhookInput"/><output message="tns:CreateWebhookOutput"/><fault name="Fault" message="tns:FaultMessage"/>
+    </operation>
+  </portType>
+
+  <binding name="APIcultureBinding" type="tns:APIculturePort">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <operation name="ListApiaries"><soap:operation soapAction="https://api.apiculture.example/soap/v1/ListApiaries"/><input><soap:body use="literal"/></input><output><soap:body use="literal"/></output><fault name="Fault"><soap:fault name="Fault" use="literal"/></fault></operation>
+    <operation name="CreateApiary"><soap:operation soapAction="https://api.apiculture.example/soap/v1/CreateApiary"/><input><soap:body use="literal"/></input><output><soap:body use="literal"/></output><fault name="Fault"><soap:fault name="Fault" use="literal"/></fault></operation>
+    <operation name="GetApiary"><soap:operation soapAction="https://api.apiculture.example/soap/v1/GetApiary"/><input><soap:body use="literal"/></input><output><soap:body use="literal"/></output><fault name="Fault"><soap:fault name="Fault" use="literal"/></fault></operation>
+    <operation name="UpdateApiary"><soap:operation soapAction="https://api.apiculture.example/soap/v1/UpdateApiary"/><input><soap:body use="literal"/></input><output><soap:body use="literal"/></output><fault name="Fault"><soap:fault name="Fault" use="literal"/></fault></operation>
+    <operation name="DeleteApiary"><soap:operation soapAction="https://api.apiculture.example/soap/v1/DeleteApiary"/><input><soap:body use="literal"/></input><output><soap:body use="literal"/></output><fault name="Fault"><soap:fault name="Fault" use="literal"/></fault></operation>
+    <operation name="ListHives"><soap:operation soapAction="https://api.apiculture.example/soap/v1/ListHives"/><input><soap:body use="literal"/></input><output><soap:body use="literal"/></output><fault name="Fault"><soap:fault name="Fault" use="literal"/></fault></operation>
+    <operation name="CreateHive"><soap:operation soapAction="https://api.apiculture.example/soap/v1/CreateHive"/><input><soap:body use="literal"/></input><output><soap:body use="literal"/></output><fault name="Fault"><soap:fault name="Fault" use="literal"/></fault></operation>
+    <operation name="GetHive"><soap:operation soapAction="https://api.apiculture.example/soap/v1/GetHive"/><input><soap:body use="literal"/></input><output><soap:body use="literal"/></output><fault name="Fault"><soap:fault name="Fault" use="literal"/></fault></operation>
+    <operation name="ListInspections"><soap:operation soapAction="https://api.apiculture.example/soap/v1/ListInspections"/><input><soap:body use="literal"/></input><output><soap:body use="literal"/></output><fault name="Fault"><soap:fault name="Fault" use="literal"/></fault></operation>
+    <operation name="CreateInspection"><soap:operation soapAction="https://api.apiculture.example/soap/v1/CreateInspection"/><input><soap:body use="literal"/></input><output><soap:body use="literal"/></output><fault name="Fault"><soap:fault name="Fault" use="literal"/></fault></operation>
+    <operation name="ListWebhooks"><soap:operation soapAction="https://api.apiculture.example/soap/v1/ListWebhooks"/><input><soap:body use="literal"/></input><output><soap:body use="literal"/></output><fault name="Fault"><soap:fault name="Fault" use="literal"/></fault></operation>
+    <operation name="CreateWebhook"><soap:operation soapAction="https://api.apiculture.example/soap/v1/CreateWebhook"/><input><soap:body use="literal"/></input><output><soap:body use="literal"/></output><fault name="Fault"><soap:fault name="Fault" use="literal"/></fault></operation>
+  </binding>
+
+  <service name="APIculture">
+    <port name="APIculturePort" binding="tns:APIcultureBinding">
+      <soap:address location="https://sandbox.api.apiculture.example/soap/v1"/>
+    </port>
+  </service>
+</definitions>

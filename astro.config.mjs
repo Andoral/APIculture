@@ -18,6 +18,18 @@ export default defineConfig({
 	markdown: {
 		processor: satteri({ hastPlugins: [satteriBaseLinks({ base })] }),
 	},
+	vite: {
+		assetsInclude: ['**/*.wsdl', '**/*.proto', '**/*.graphql'],
+	},
+	redirects: {
+		'/reference/v1': '/reference/rest/v1',
+		'/openapi/v1.yaml': '/specs/rest/v1.yaml',
+		'/getting-started/quickstart': '/rest/quickstart',
+		'/guides/pagination': '/rest/guides/pagination',
+		'/guides/idempotency': '/rest/guides/idempotency',
+		'/guides/webhooks': '/rest/guides/webhooks',
+		'/guides/rate-limits': '/rest/guides/rate-limits',
+	},
 	integrations: [
 		starlight({
 			title: 'APIculture',
@@ -37,24 +49,73 @@ export default defineConfig({
 					label: 'Getting Started',
 					items: [
 						{ label: 'Architecture & concepts', slug: '' },
-						{ label: 'Quickstart', slug: 'getting-started/quickstart' },
 						{ label: 'Authentication', slug: 'getting-started/authentication' },
+						{ label: 'Local sandbox', slug: 'getting-started/sandbox' },
 					],
 				},
 				{
-					label: 'Guides',
-					items: [{ autogenerate: { directory: 'guides' } }],
+					label: 'REST',
+					badge: { text: 'stable', variant: 'success' },
+					items: [
+						{ label: 'Overview', slug: 'rest' },
+						{ label: 'Quickstart', slug: 'rest/quickstart' },
+						{ label: 'Guides', items: [{ autogenerate: { directory: 'rest/guides' } }] },
+						{
+							label: 'Reference v1',
+							link: withBase('/reference/rest/v1/'),
+							badge: { text: 'Scalar', variant: 'note' },
+						},
+					],
 				},
 				{
-					label: 'API Reference',
+					label: 'SOAP',
 					items: [
-						{ label: 'Overview', slug: 'reference' },
-						{ label: 'v1 (current)', link: withBase('/reference/v1/'), badge: { text: 'stable', variant: 'success' } },
+						{ label: 'Overview', slug: 'soap' },
+						{ label: 'Quickstart', slug: 'soap/quickstart' },
+						{ label: 'Reference', slug: 'soap/reference' },
+					],
+				},
+				{
+					label: 'JSON-RPC',
+					items: [
+						{ label: 'Overview', slug: 'rpc' },
+						{ label: 'Quickstart', slug: 'rpc/quickstart' },
+						{ label: 'Reference', slug: 'rpc/reference' },
+					],
+				},
+				{
+					label: 'gRPC',
+					items: [
+						{ label: 'Overview', slug: 'grpc' },
+						{ label: 'Quickstart', slug: 'grpc/quickstart' },
+						{ label: 'Reference', slug: 'grpc/reference' },
+					],
+				},
+				{
+					label: 'GraphQL',
+					items: [
+						{ label: 'Overview', slug: 'graphql' },
+						{ label: 'Quickstart', slug: 'graphql/quickstart' },
+						{ label: 'Reference', slug: 'graphql/reference' },
+					],
+				},
+				{
+					label: 'WebSocket',
+					items: [
+						{ label: 'Overview', slug: 'websocket' },
+						{ label: 'Quickstart', slug: 'websocket/quickstart' },
+						{ label: 'Reference', slug: 'websocket/reference' },
+						{
+							label: 'AsyncAPI explorer',
+							link: withBase('/reference/websocket/v1/'),
+							badge: { text: 'Scalar', variant: 'note' },
+						},
 					],
 				},
 				{
 					label: 'Resources',
 					items: [
+						{ label: 'Specifications', slug: 'reference' },
 						{ label: 'Errors', slug: 'resources/errors' },
 						{ label: 'Versioning & deprecation', slug: 'resources/versioning' },
 						{ label: 'SDKs', slug: 'resources/sdks' },

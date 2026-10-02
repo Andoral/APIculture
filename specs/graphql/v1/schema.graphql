@@ -1,0 +1,166 @@
+"""
+APIculture GraphQL API. Same domain as REST: apiaries, hives, inspections.
+
+Send `Authorization: Bearer ak_…` on every HTTP request to `/graphql`.
+Timestamps are RFC 3339 UTC. Identifiers keep their REST prefixes (`ap_`, `hv_`, `in_`, `wh_`).
+"""
+
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type Query {
+  """Apiaries visible to the authenticated account, newest first."""
+  apiaries(first: Int = 20, after: String): ApiaryConnection!
+  apiary(id: ID!): Apiary
+  """Hives, optionally filtered by apiary or status."""
+  hives(apiaryId: ID, status: HiveStatus, first: Int = 20, after: String): HiveConnection!
+  hive(id: ID!): Hive
+  inspections(hiveId: ID!, first: Int = 20, after: String): InspectionConnection!
+  webhookEndpoints: [WebhookEndpoint!]!
+}
+
+type Mutation {
+  createApiary(input: ApiaryInput!): Apiary!
+  updateApiary(id: ID!, input: ApiaryInput!): Apiary!
+  """Fails if the apiary still contains hives."""
+  deleteApiary(id: ID!): Boolean!
+  createHive(input: HiveInput!): Hive!
+  createInspection(hiveId: ID!, input: InspectionInput!): Inspection!
+  """The `secret` is returned only in this payload — store it."""
+  createWebhookEndpoint(input: WebhookEndpointInput!): WebhookEndpointCreated!
+}
+
+type Apiary {
+  id: ID!
+  name: String!
+  location: GeoPoint
+  hiveCount: Int!
+  createdAt: String!
+  hives(status: HiveStatus, first: Int = 20, after: String): HiveConnection!
+}
+
+input ApiaryInput {
+  name: String!
+  location: GeoPointInput
+}
+
+type Hive {
+  id: ID!
+  apiary: Apiary!
+  label: String!
+  status: HiveStatus!
+  queenInstalledAt: String
+  lastInspectedAt: String
+  createdAt: String!
+  updatedAt: String!
+  inspections(first: Int = 20, after: String): InspectionConnection!
+}
+
+input HiveInput {
+  apiaryId: ID!
+  label: String!
+  queenInstalledAt: String
+}
+
+enum HiveStatus {
+  ACTIVE
+  QUEENLESS
+  SWARMED
+  DEAD
+  ARCHIVED
+}
+
+type Inspection {
+  id: ID!
+  hive: Hive!
+  inspectedAt: String!
+  queenSeen: Boolean!
+  broodFrames: Int
+  temperament: Temperament
+  notes: String
+  createdAt: String!
+}
+
+input InspectionInput {
+  inspectedAt: String!
+  queenSeen: Boolean = false
+  broodFrames: Int
+  temperament: Temperament
+  notes: String
+}
+
+enum Temperament {
+  CALM
+  NERVOUS
+  AGGRESSIVE
+}
+
+type WebhookEndpoint {
+  id: ID!
+  url: String!
+  events: [WebhookEventType!]!
+  createdAt: String!
+}
+
+type WebhookEndpointCreated {
+  endpoint: WebhookEndpoint!
+  secret: String!
+}
+
+input WebhookEndpointInput {
+  url: String!
+  events: [WebhookEventType!]!
+}
+
+enum WebhookEventType {
+  INSPECTION_CREATED
+  HIVE_STATUS_CHANGED
+  APIARY_DELETED
+}
+
+type GeoPoint {
+  latitude: Float!
+  longitude: Float!
+}
+
+input GeoPointInput {
+  latitude: Float!
+  longitude: Float!
+}
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+}
+
+type ApiaryConnection {
+  edges: [ApiaryEdge!]!
+  pageInfo: PageInfo!
+}
+
+type ApiaryEdge {
+  cursor: String!
+  node: Apiary!
+}
+
+type HiveConnection {
+  edges: [HiveEdge!]!
+  pageInfo: PageInfo!
+}
+
+type HiveEdge {
+  cursor: String!
+  node: Hive!
+}
+
+type InspectionConnection {
+  edges: [InspectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type InspectionEdge {
+  cursor: String!
+  node: Inspection!
+}

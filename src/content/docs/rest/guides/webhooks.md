@@ -18,8 +18,8 @@ Instead of polling, register an HTTPS endpoint and APIculture will `POST` an eve
 ## Registering an endpoint
 
 ```bash
-curl -X POST https://api.apiculture.example/v1/webhooks \
-  -H "Authorization: Bearer $KEY" \
+curl -X POST http://127.0.0.1:8787/v1/webhooks \
+  -H "Authorization: Bearer ak_test_local" \
   -H "Content-Type: application/json" \
   -d '{ "url": "https://example.com/hooks/apiculture", "events": ["inspection.created"] }'
 ```

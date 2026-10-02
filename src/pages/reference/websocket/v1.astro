@@ -1,0 +1,89 @@
+---
+/**
+ * AsyncAPI explorer for the WebSocket API, rendered by Scalar.
+ */
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const specUrl = `${base}/specs/websocket/v1.yaml`;
+const docsUrl = `${base}/websocket/`;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>WebSocket Reference v1 · APIculture</title>
+		<meta name="description" content="AsyncAPI explorer for APIculture WebSocket channels and payloads." />
+		<link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
+	</head>
+	<body>
+		<nav class="topbar">
+			<a class="brand" href={docsUrl}>← WebSocket docs</a>
+			<span class="version">WebSocket v1 <span class="badge">stable</span></span>
+			<a class="spec" href={specUrl} download="apiculture-websocket-v1.asyncapi.yaml">Download AsyncAPI</a>
+		</nav>
+
+		<div id="api-reference" data-spec-url={specUrl}></div>
+
+		<script>
+			import { createApiReference } from '@scalar/api-reference';
+			import '@scalar/api-reference/style.css';
+
+			const root = document.getElementById('api-reference')!;
+
+			createApiReference(root, {
+				url: root.dataset.specUrl!,
+				hideModels: false,
+				metaData: { title: 'APIculture WebSocket v1' },
+			});
+		</script>
+
+		<style>
+			:root {
+				--topbar-height: 44px;
+			}
+			body {
+				margin: 0;
+				font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+			}
+			.topbar {
+				position: sticky;
+				top: 0;
+				z-index: 10;
+				height: var(--topbar-height);
+				display: flex;
+				align-items: center;
+				gap: 1rem;
+				padding: 0 1rem;
+				border-bottom: 1px solid var(--scalar-border-color, #e5e5e5);
+				background: var(--scalar-background-1, #fff);
+				color: var(--scalar-color-1, #111);
+				font-size: 0.875rem;
+			}
+			.topbar a {
+				color: inherit;
+				text-decoration: none;
+			}
+			.topbar a:hover {
+				text-decoration: underline;
+			}
+			.brand {
+				font-weight: 600;
+			}
+			.version {
+				margin-left: auto;
+				opacity: 0.8;
+			}
+			.badge {
+				display: inline-block;
+				margin-left: 0.25rem;
+				padding: 0 0.4rem;
+				border-radius: 999px;
+				background: #1a7f37;
+				color: #fff;
+				font-size: 0.7rem;
+				line-height: 1.4;
+			}
+		</style>
+	</body>
+</html>

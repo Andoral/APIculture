@@ -4,31 +4,42 @@ description: 'How APIculture is structured: client–server architecture, the da
 ---
 
 import ArchitectureDiagram from '../../components/ArchitectureDiagram.astro';
-import { LinkButton } from '@astrojs/starlight/components';
+import { LinkButton, LinkCard, CardGrid } from '@astrojs/starlight/components';
 
-APIculture is a REST API for apiaries, hives and inspections. Predictable JSON, cursor pagination, idempotent writes, signed webhooks.
+APIculture is a developer portal for the same apiary / hive / inspection domain, exposed through several API styles. Each style has its own machine-readable contract.
 
-<LinkButton href="/getting-started/quickstart/" icon="right-arrow">Quickstart</LinkButton>
-<LinkButton href="/reference/v1/" variant="minimal" icon="open-book">API Reference</LinkButton>
+<LinkButton href="/rest/quickstart/" icon="right-arrow">REST quickstart</LinkButton>
+<LinkButton href="/reference/" variant="minimal" icon="open-book">All specifications</LinkButton>
+
+## API styles
+
+<CardGrid>
+	<LinkCard title="REST" href="/rest/" description="OpenAPI 3.1 · JSON over HTTPS. Scalar reference." />
+	<LinkCard title="SOAP" href="/soap/" description="WSDL · XML document/literal." />
+	<LinkCard title="JSON-RPC" href="/rpc/" description="OpenRPC · named procedures over HTTPS." />
+	<LinkCard title="gRPC" href="/grpc/" description="Protocol Buffers · typed services. grpcurl." />
+	<LinkCard title="GraphQL" href="/graphql/" description="SDL · typed graph, Relay pagination." />
+	<LinkCard title="WebSocket" href="/websocket/" description="AsyncAPI · live event channels." />
+</CardGrid>
 
 ## Architecture
 
-A typical client–server setup. **Your application is the client**; **APIculture is the server**. The client never talks to the data store directly.
+A typical **REST** client–server setup. **Your application is the client**; **APIculture is the server**. The client never talks to the data store directly. SOAP, JSON-RPC, gRPC, GraphQL and WebSocket use the same split with a different payload and contract.
 
 <ArchitectureDiagram />
 
 | Piece | Role |
 | --- | --- |
-| **Client** | Your backend (or an SDK running on it). Holds the API key, signs requests, retries with `Idempotency-Key`. |
-| **Server** | The APIculture API at `/v1`. Authenticates the key, enforces rate limits, applies business rules, emits webhooks. |
-| **Data store** | Apiaries, hives and inspections owned by the account behind the key. Not reachable except through the API. |
-| **Webhook endpoint** | An HTTPS URL you register. The server `POST`s signed events here when state changes, so you do not poll. |
+| **Client** | Your backend (or an SDK running on it). Holds the API key and talks to one of the protocol hosts. |
+| **Server** | APIculture, behind a style-specific URL (`/v1`, `/soap/v1`, `/rpc/v1`, `/graphql`, `wss://…`). |
+| **Data store** | Apiaries, hives and inspections owned by the account behind the key. Not reachable except through an API. |
+| **Events** | REST [webhooks](/rest/guides/webhooks/) for account-wide HTTPS delivery; [WebSocket](/websocket/) for per-hive channels. |
 
-### Request path
+### Request path (REST)
 
 1. The client sends `Authorization: Bearer ak_…` over HTTPS to the sandbox or production host.
 2. The server authenticates the key, applies the resource to the store, and returns JSON (or a [Problem Details](/resources/errors/) error).
-3. On a relevant change the server sends a signed `POST` to your webhook URL. See [Webhooks](/guides/webhooks/).
+3. On a relevant change the server sends a signed `POST` to your webhook URL. See [Webhooks](/rest/guides/webhooks/).
 
 Browsers and mobile apps must **not** hold a key — they would expose it. Call the API from your server. Details: [Authentication](/getting-started/authentication/).
 
@@ -36,10 +47,11 @@ Browsers and mobile apps must **not** hold a key — they would expose it. Call 
 
 | Environment | Base URL | Keys |
 | --- | --- | --- |
-| Sandbox | `https://sandbox.api.apiculture.example/v1` | `ak_test_…` |
+| Local sandbox | `http://127.0.0.1:8787/v1` (`npm run sandbox`) | any `ak_test_…` |
+| Hosted sandbox | `https://sandbox.api.apiculture.example/v1` | `ak_test_…` |
 | Production | `https://api.apiculture.example/v1` | `ak_live_…` |
 
-The sandbox has the same surface as production, uses isolated test data, and never sends real notifications.
+The [local sandbox](/getting-started/sandbox/) has the same HTTP surface as the contracts, uses isolated in-memory data per key, and never sends real webhook POSTs. The `*.apiculture.example` hosts are documentation defaults, not this repository.
 
 ## Data model
 
@@ -58,7 +70,7 @@ Account
 | Apiary | `ap_` | A physical site with a name and optional coordinates. |
 | Hive | `hv_` | One colony in one hive box. Belongs to exactly one apiary and carries a [lifecycle status](#hive-lifecycle). |
 | Inspection | `in_` | An immutable record of a visit to a hive: queen seen, brood frames, temperament, notes. |
-| Webhook endpoint | `wh_` | An HTTPS URL that receives [events](/guides/webhooks/). |
+| Webhook endpoint | `wh_` | An HTTPS URL that receives REST [events](/rest/guides/webhooks/). |
 
 ### Identifiers
 
@@ -66,9 +78,9 @@ Identifiers are strings composed of a resource prefix and a 26-character [ULID](
 
 ### Mutability
 
-- Apiaries and hives can be updated with `PATCH`.
+- Apiaries and hives can be updated (REST: `PATCH`).
 - Inspections are **append-only**. A mistaken inspection is corrected by recording a new one; the history is never rewritten.
-- Deleting an apiary is refused (`409`) while it still contains hives — move or delete the hives first.
+- Deleting an apiary is refused while it still contains hives — move or delete the hives first.
 
 ### Timestamps and dates
 
@@ -110,6 +122,6 @@ Every hive has a `status` field describing the state of the colony.
               └──────────────┘
 ```
 
-- Status changes are made by the beekeeper in the app or via `PATCH /hives/{hiveId}`; the API never changes a status on its own based on inspection data.
-- `archived` is terminal. Archived hives are excluded from `GET /hives` unless `status=archived` is passed explicitly.
-- Every change emits a `hive.status_changed` [webhook event](/guides/webhooks/) with the previous and new status in `data`.
+- Status changes are made by the beekeeper in the app or via the API (REST: `PATCH /hives/{hiveId}`); the API never changes a status on its own based on inspection data.
+- `archived` is terminal. Archived hives are excluded from default lists unless asked for explicitly.
+- Every change emits a `hive.status_changed` event ([REST webhooks](/rest/guides/webhooks/) or [WebSocket](/websocket/reference/)).

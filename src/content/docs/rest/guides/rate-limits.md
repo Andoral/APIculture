@@ -25,7 +25,7 @@ Every response carries the current state of your budget:
 
 ## When you exceed the limit
 
-You receive `429 Too Many Requests` with a [Problem](/resources/errors/) body and `code: rate_limited`. Wait for `Retry-After` seconds, then retry the same request — see [Idempotency and retries](/guides/idempotency/).
+You receive `429 Too Many Requests` with a [Problem](/resources/errors/) body and `code: rate_limited`. Wait for `Retry-After` seconds, then retry the same request — see [Idempotency and retries](/rest/guides/idempotency/).
 
 ## Staying under the limit
 

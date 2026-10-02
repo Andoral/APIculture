@@ -5,13 +5,19 @@ sidebar:
   order: 2
 ---
 
-Every request must carry an API key in the `Authorization` header using the Bearer scheme:
+Every request must carry an API key. Keys themselves (`ak_test_` / `ak_live_`) are the same across styles; only the binding changes. Against the [local sandbox](/getting-started/sandbox/) any `ak_test_…` string is accepted — there is no dashboard.
+
+**REST, JSON-RPC, GraphQL, SOAP:** HTTP header `Authorization: Bearer ak_…`.
 
 ```http
 GET /v1/apiaries HTTP/1.1
 Host: api.apiculture.example
 Authorization: Bearer ak_live_3f9a…
 ```
+
+**gRPC:** metadata `authorization: Bearer ak_…` (see [gRPC](/grpc/)).
+
+**WebSocket:** `wss://…/v1?token=ak_…` or a first `{ "op": "auth", "token": "ak_…" }` frame (see [WebSocket](/websocket/)).
 
 ## Key types
 

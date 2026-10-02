@@ -1,28 +1,17 @@
 ---
-title: API Reference
-description: Where the reference lives, how it is produced, and how to use the machine-readable spec.
+title: Specifications
+description: Machine-readable contracts for every APIculture API style, and where each interactive reference lives.
 ---
 
-The reference is generated from the OpenAPI 3.1 document in [`openapi/v1/openapi.yaml`](https://github.com/Andoral/APIculture/blob/main/openapi/v1/openapi.yaml). The same document drives the interactive pages, the SDKs and the sandbox mock server, so what you read here is exactly what the API accepts.
+Each style has its own contract in `specs/`. The site serves that file as a static download; human-readable and interactive references are generated from it, not rewritten as a second source of truth.
 
-| Version | Status | Interactive reference | OpenAPI document |
-| --- | --- | --- | --- |
-| v1 | stable | [Open reference](/reference/v1/) | [`/openapi/v1.yaml`](/openapi/v1.yaml) |
+| Style | Contract in git | Download | Human-readable | Interactive |
+| --- | --- | --- | --- | --- |
+| REST | [`openapi.yaml`](https://github.com/Andoral/APIculture/blob/main/specs/rest/v1/openapi.yaml) | [`/specs/rest/v1.yaml`](/specs/rest/v1.yaml) | [REST](/rest/) | [Scalar](/reference/rest/v1/) |
+| SOAP | [`apiculture.wsdl`](https://github.com/Andoral/APIculture/blob/main/specs/soap/v1/apiculture.wsdl) | [`/specs/soap/v1.wsdl`](/specs/soap/v1.wsdl) | [Operations](/soap/reference/) | — |
+| JSON-RPC | [`openrpc.json`](https://github.com/Andoral/APIculture/blob/main/specs/rpc/v1/openrpc.json) | [`/specs/rpc/v1.json`](/specs/rpc/v1.json) | [Methods](/rpc/reference/) | — |
+| gRPC | [`apiculture.proto`](https://github.com/Andoral/APIculture/blob/main/specs/grpc/v1/apiculture.proto) | [`/specs/grpc/v1.proto`](/specs/grpc/v1.proto) | [Services](/grpc/reference/) | — |
+| GraphQL | [`schema.graphql`](https://github.com/Andoral/APIculture/blob/main/specs/graphql/v1/schema.graphql) | [`/specs/graphql/v1.graphql`](/specs/graphql/v1.graphql) | [Schema](/graphql/reference/) | — |
+| WebSocket | [`asyncapi.yaml`](https://github.com/Andoral/APIculture/blob/main/specs/websocket/v1/asyncapi.yaml) | [`/specs/websocket/v1.yaml`](/specs/websocket/v1.yaml) | [Channels](/websocket/reference/) | [Scalar](/reference/websocket/v1/) |
 
-## Using the interactive reference
-
-- The left column lists endpoints grouped by tag; the right column shows request examples in curl, JavaScript, Python, Go and more.
-- **Test request** opens a client in the browser. Paste a sandbox key (`ak_test_…`) into the `Authorization` field; requests go to the sandbox server by default.
-- Every schema and enum is browsable under **Models**.
-
-## Using the OpenAPI document directly
-
-```bash
-# generate a typed TypeScript client
-npx openapi-typescript https://docs.apiculture.example/openapi/v1.yaml -o apiculture.d.ts
-
-# run a local mock server that answers with the examples from the spec
-npx @stoplight/prism-cli mock https://docs.apiculture.example/openapi/v1.yaml
-```
-
-The document is validated in CI with [Spectral](https://github.com/stoplightio/spectral) using the ruleset in [`.spectral.yaml`](https://github.com/Andoral/APIculture/blob/main/.spectral.yaml): every operation must have a summary, a description, documented error responses, and consistent naming. A change to the API that lacks documentation cannot be merged.
+CI runs `npm run lint:specs`: Spectral on REST OpenAPI (`.spectral.yaml`) plus structural checks for WSDL, OpenRPC, proto, GraphQL SDL and AsyncAPI.

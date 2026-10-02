@@ -28,10 +28,12 @@ info:
   termsOfService: https://apiculture.example/terms
 
 servers:
-  # Sandbox is listed first on purpose: it is the default target for "Test request"
-  # in the interactive reference, so nobody hits production by accident.
+  # Local sandbox is first so Scalar "Test request" hits a live process when
+  # you run `npm run sandbox`. The example.com hosts stay as documentation defaults.
+  - url: http://127.0.0.1:8787/v1
+    description: Local sandbox (`npm run sandbox`)
   - url: https://sandbox.api.apiculture.example/v1
-    description: Sandbox (test data, no side effects outside the sandbox)
+    description: Hosted sandbox (documentation default, not this repository)
   - url: https://api.apiculture.example/v1
     description: Production
 
@@ -196,7 +198,7 @@ paths:
       tags: [Hives]
       operationId: listHives
       summary: List hives
-      description: Returns hives, optionally filtered by apiary or status.
+      description: Returns hives, optionally filtered by apiary or status. Archived hives are omitted unless `status=archived` is set.
       parameters:
         - name: apiary_id
           in: query

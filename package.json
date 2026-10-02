@@ -6,22 +6,34 @@
   "description": "Developer documentation portal for the APIculture API",
   "scripts": {
     "dev": "astro dev",
-    "build": "npm run lint:openapi && astro build",
+    "build": "npm run lint:specs && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "lint:openapi": "spectral lint \"openapi/**/openapi.yaml\" --fail-severity=warn",
+    "sandbox": "tsx sandbox/server.ts",
+    "sandbox:smoke": "node scripts/smoke-sandbox.mjs",
+    "lint:specs": "node scripts/lint-specs.mjs",
+    "lint:openapi": "npm run lint:specs",
     "check": "astro check"
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "^0.4.2",
     "@astrojs/starlight": "^0.42.4",
+    "@hono/node-server": "^1.19.6",
     "@scalar/api-reference": "^1.72.3",
     "astro": "^7.2.10",
-    "sharp": "^0.35.3"
+    "fast-xml-parser": "^5.3.0",
+    "graphql": "^16.11.0",
+    "hono": "^4.10.3",
+    "sharp": "^0.35.3",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@asyncapi/parser": "^3.4.0",
     "@stoplight/spectral-cli": "^6.16.3",
+    "@types/ws": "^8.18.1",
+    "protobufjs": "^7.5.4",
+    "tsx": "^4.21.0",
     "typescript": "^6.0.3"
   },
   "engines": {

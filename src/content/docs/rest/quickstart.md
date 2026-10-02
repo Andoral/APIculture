@@ -7,9 +7,13 @@ sidebar:
 
 By the end of this page you will have created an apiary in the sandbox and read it back.
 
-## 1. Get a sandbox API key
+## 1. Start the local sandbox
 
-Sign in to the APIculture dashboard, open **Developers → API keys** and create a key in the **Sandbox** environment. Sandbox keys start with `ak_test_` and cannot touch production data.
+```bash
+npm run sandbox
+```
+
+Use any key that starts with `ak_test_`. There is no dashboard for the local process — `ak_test_local` is enough. Details: [Local sandbox](/getting-started/sandbox/).
 
 :::caution
 Treat API keys like passwords. Never ship them in mobile or browser code; call the API from your backend.
@@ -18,8 +22,8 @@ Treat API keys like passwords. Never ship them in mobile or browser code; call t
 ## 2. Make your first request
 
 ```bash
-curl https://sandbox.api.apiculture.example/v1/apiaries \
-  -H "Authorization: Bearer ak_test_REPLACE_ME"
+curl http://127.0.0.1:8787/v1/apiaries \
+  -H "Authorization: Bearer ak_test_local"
 ```
 
 A fresh sandbox account has no apiaries yet, so you get an empty page:
@@ -36,8 +40,8 @@ A `200` response means authentication works. If you get `401`, check the [Authen
 ## 3. Create an apiary
 
 ```bash
-curl -X POST https://sandbox.api.apiculture.example/v1/apiaries \
-  -H "Authorization: Bearer ak_test_REPLACE_ME" \
+curl -X POST http://127.0.0.1:8787/v1/apiaries \
+  -H "Authorization: Bearer ak_test_local" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: 5f2c7a4e-2f1e-4c1a-9d1e-0c1d2e3f4a5b" \
   -d '{
@@ -56,18 +60,18 @@ curl -X POST https://sandbox.api.apiculture.example/v1/apiaries \
 }
 ```
 
-The `Idempotency-Key` header makes the request safe to retry: sending the same request again returns this same apiary instead of creating a duplicate. See [Idempotency](/guides/idempotency/).
+The `Idempotency-Key` header makes the request safe to retry: sending the same request again returns this same apiary instead of creating a duplicate. See [Idempotency](/rest/guides/idempotency/).
 
 ## 4. Read it back
 
 ```bash
-curl https://sandbox.api.apiculture.example/v1/apiaries/ap_01J8Z5N6K8Q2X3W4V5B6C7D8E9 \
-  -H "Authorization: Bearer ak_test_REPLACE_ME"
+curl http://127.0.0.1:8787/v1/apiaries/ap_01J8Z5N6K8Q2X3W4V5B6C7D8E9 \
+  -H "Authorization: Bearer ak_test_local"
 ```
 
 ## Next steps
 
-- Add hives and record inspections — see the [API Reference](/reference/v1/).
-- Page through long lists with [Pagination](/guides/pagination/).
-- Get notified about changes with [Webhooks](/guides/webhooks/).
+- Add hives and record inspections — see the [REST Reference](/reference/rest/v1/).
+- Page through long lists with [Pagination](/rest/guides/pagination/).
+- Get notified about changes with [Webhooks](/rest/guides/webhooks/).
 - Understand how the pieces fit together in [Architecture & concepts](/).

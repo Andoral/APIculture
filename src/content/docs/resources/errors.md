@@ -1,9 +1,19 @@
 ---
 title: Errors
-description: The single error format used by every endpoint and the full list of stable error codes.
+description: REST error format (RFC 9457) and the list of stable error codes.
 ---
 
-Every error response uses `Content-Type: application/problem+json` and the shape defined by [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457), extended with a stable `code` and, for validation errors, a per-field `errors` array.
+:::note
+This catalogue is the REST error model (`application/problem+json`). Other styles reuse the same `code` strings:
+
+- [SOAP Faults](/soap/#faults)
+- [JSON-RPC](/rpc/#errors)
+- [gRPC status](/grpc/#status-codes)
+- [GraphQL `errors[]`](/graphql/#errors)
+- [WebSocket close codes](/websocket/#close-codes)
+:::
+
+Every REST error response uses `Content-Type: application/problem+json` and the shape defined by [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457), extended with a stable `code` and, for validation errors, a per-field `errors` array.
 
 ```json
 {
@@ -22,7 +32,7 @@ Every error response uses `Content-Type: application/problem+json` and the shape
 | Field | Stable? | Use it for |
 | --- | --- | --- |
 | `code` | Yes | Branching in code. Codes are never renamed or removed within a major version. |
-| `status` | Yes | Retry decisions (see [Idempotency and retries](/guides/idempotency/)). |
+| `status` | Yes | Retry decisions (see [Idempotency and retries](/rest/guides/idempotency/)). |
 | `errors[].field` | Yes | Highlighting the offending input in your UI. |
 | `title`, `detail` | No | Logging and showing to developers. Wording may change; do not match on it. |
 | `type` | Yes | Linking to this page. |

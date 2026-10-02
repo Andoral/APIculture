@@ -1,43 +1,46 @@
 # APIculture — API documentation portal
 
-Developer documentation for the APIculture API, built as **docs-as-code**:
-
-- `openapi/v1/openapi.yaml` is the single source of truth for the API surface. The interactive reference is rendered from it; SDKs and mocks can be generated from it.
-- Guides, concepts and resources are Markdown/MDX in `src/content/docs/`, organised by the [Diátaxis](https://diataxis.fr/) model (tutorial → how-to → reference → explanation).
-- Everything is linted and built in CI; a change to the API that lacks documentation cannot be merged.
+Developer documentation for APIculture, built as **docs-as-code**. The same apiary / hive / inspection domain is exposed through several API styles. Each style has a machine-readable contract in `specs/`, a quickstart and a human-readable reference. REST and WebSocket also have a Scalar explorer.
 
 ## Stack
 
 | Concern | Tool | Why |
 | --- | --- | --- |
 | Site generator | [Astro](https://astro.build) + [Starlight](https://starlight.astro.build) | Static output, zero JS by default, sidebar/search/i18n/dark mode out of the box. |
-| API reference | [Scalar](https://github.com/scalar/scalar) | Three-column layout, code samples in 20+ languages, built-in "Test request" client. |
-| Spec quality gate | [Spectral](https://github.com/stoplightio/spectral) | Fails the build when an operation lacks a summary, description, error responses, examples or consistent naming. See `.spectral.yaml`. |
+| REST reference | [Scalar](https://github.com/scalar/scalar) | Three-column layout, code samples, built-in "Test request" client. |
+| Spec quality gate | [Spectral](https://github.com/stoplightio/spectral) + `scripts/lint-specs.mjs` | REST OpenAPI is linted with Spectral. WSDL, OpenRPC, proto, GraphQL SDL and AsyncAPI are parsed and checked structurally in CI. |
 | Search | Pagefind (bundled with Starlight) | Static index, no external service. |
 | Hosting | GitHub Pages (production), Cloudflare Pages (PR previews) | Static, free, CDN-backed. See `.github/workflows/docs.yml`. |
+| Sandbox | `npm run sandbox` | In-memory server for REST, SOAP, JSON-RPC, GraphQL and WebSocket. gRPC stays contract-only (needs HTTP/2 + generated stubs). |
 
 ## Layout
 
 ```
-openapi/
-  v1/openapi.yaml            # source of truth for API v1 (add v2/ alongside when the time comes)
-.spectral.yaml               # OpenAPI lint rules enforced in CI
+specs/
+  rest/v1/openapi.yaml           # OpenAPI 3.1
+  soap/v1/apiculture.wsdl        # WSDL (document/literal)
+  rpc/v1/openrpc.json            # OpenRPC 1.3
+  grpc/v1/apiculture.proto       # Protocol Buffers 3
+  graphql/v1/schema.graphql      # GraphQL SDL
+  websocket/v1/asyncapi.yaml     # AsyncAPI 3
+.spectral.yaml                   # OpenAPI lint rules
+scripts/lint-specs.mjs           # all-style contract checks
+sandbox/                         # local multi-style sandbox
 src/
-  content/docs/              # Markdown/MDX pages (Starlight)
-    index.mdx                #   landing page
-    getting-started/         #   tutorial: quickstart, authentication
-    guides/                  #   how-to: pagination, idempotency, webhooks, rate limits
-    concepts/                #   explanation: data model, hive lifecycle
-    reference/index.md       #   how the reference is produced and how to use the spec
-    resources/               #   errors catalogue, versioning policy, SDKs
-    changelog.md
+  content/docs/
+    index.mdx                    # architecture, data model, map of styles
+    getting-started/
+    rest/                        # REST overview, quickstart, guides
+    soap/ rpc/ grpc/ graphql/ websocket/
+    reference/index.md           # contract catalog
+    resources/ changelog.md
   pages/
-    reference/v1.astro       # interactive reference (Scalar) for v1
-    openapi/v1.yaml.ts       # serves openapi/v1/openapi.yaml at /openapi/v1.yaml
-  plugins/satteri-base-links.mjs  # prefixes author-written links with Astro `base`
-  content.config.ts          # Starlight collection (+ base-prefixing of hero links)
-astro.config.mjs             # site config, sidebar
-.github/workflows/docs.yml   # lint → check → build → deploy / preview
+    reference/rest/v1.astro      # Scalar
+    reference/websocket/v1.astro
+    specs/**                     # serves files from specs/
+  lib/serve-spec.ts
+astro.config.mjs                 # sidebar + redirects from old REST URLs
+.github/workflows/docs.yml
 ```
 
 ## Local development
@@ -45,23 +48,25 @@ astro.config.mjs             # site config, sidebar
 ```bash
 npm install
 npm run dev          # http://localhost:4321
-npm run lint:openapi # Spectral only
+npm run sandbox      # http://127.0.0.1:8787  (REST / SOAP / JSON-RPC / GraphQL / WS)
+npm run lint:specs   # Spectral + structural checks for every style
 npm run build        # lint + static build into dist/
 npm run preview      # serve dist/
 ```
 
-## Adding or changing an endpoint
+Any `Authorization: Bearer ak_test_…` key works against the local sandbox. Each key gets its own isolated in-memory store. Production-shaped `ak_live_…` keys are rejected.
 
-1. Edit `openapi/v1/openapi.yaml`. Every operation needs `operationId`, `summary`, `description`, a tag, a documented `401`, and `application/problem+json` for all `4xx` responses; `POST`/`PUT`/`PATCH` bodies need an `examples` entry.
-2. Run `npm run lint:openapi` — fix anything it reports.
-3. If the change affects behaviour, add a guide or update an existing one in `src/content/docs/`, and add an entry to `src/content/docs/changelog.md`.
-4. Open a PR. CI lints, builds and (once configured) posts a preview URL.
+In the [REST Scalar reference](http://localhost:4321/reference/rest/v1/) pick the **Local sandbox** server, then use **Test request**.
 
-### Adding API v2
+## Adding or changing a REST endpoint
 
-1. Copy `openapi/v1/` to `openapi/v2/` and edit.
-2. Add `src/pages/openapi/v2.yaml.ts` and `src/pages/reference/v2.astro` (copy the v1 files, change the paths).
-3. Add a sidebar entry in `astro.config.mjs` and mark v1 with a `deprecated` badge when appropriate.
+1. Edit `specs/rest/v1/openapi.yaml`. Every operation needs `operationId`, `summary`, `description`, a tag, a documented `401`, and `application/problem+json` for all `4xx` responses; `POST`/`PUT`/`PATCH` bodies need an `examples` entry.
+2. Mirror the change in the other style contracts under `specs/` and in `sandbox/` if behaviour is affected.
+3. Run `npm run lint:specs` — fix anything it reports.
+4. If the change affects behaviour, update a guide under `src/content/docs/rest/` and add an entry to `src/content/docs/changelog.md`.
+5. Open a PR. CI lints, builds and (once configured) posts a preview URL.
+
+Old REST URLs (`/reference/v1/`, `/openapi/v1.yaml`, `/guides/…`, `/getting-started/quickstart/`) redirect to the new paths.
 
 ## Deployment
 
@@ -73,4 +78,4 @@ The same build runs in two layouts; `ASTRO_SITE` / `ASTRO_BASE` control the orig
 
 ### "Test request" and CORS
 
-The interactive reference sends requests from the browser. Until the API itself returns CORS headers for the docs origin, requests go through `https://proxy.scalar.com` (configured in `src/pages/reference/v1.astro`). For production either enable CORS on the sandbox host for the docs origin and remove `proxyUrl`, or self-host [Scalar's proxy](https://github.com/scalar/scalar/tree/main/projects/proxy-server).
+The local sandbox sends `Access-Control-Allow-Origin: *`, so Scalar talks to it directly (no proxy). A hosted production API should allow the docs origin the same way. The fictional `*.apiculture.example` hosts in the contracts are documentation defaults, not live services.

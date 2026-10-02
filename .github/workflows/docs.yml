@@ -14,10 +14,10 @@ permissions:
   contents: read
 
 jobs:
-  # 1. Quality gate: the OpenAPI document must pass the Spectral ruleset and the
-  #    site must build. Runs on every PR and on main.
+  # 1. Quality gate: every style contract must lint and the site must build.
+  #    Runs on every PR and on main.
   check:
-    name: Lint OpenAPI & build
+    name: Lint specs & build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,8 +26,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Lint OpenAPI document
-        run: npm run lint:openapi
+      - name: Lint specifications
+        run: npm run lint:specs
       - name: Type-check
         run: npm run check
       - name: Build (GitHub Pages layout)
@@ -98,7 +98,7 @@ jobs:
           script: |
             const url = `${{ steps.deploy.outputs.deployment-url }}`;
             const marker = '<!-- docs-preview -->';
-            const body = `${marker}\n📖 Docs preview for this PR: ${url}\n\nAPI reference: ${url}/reference/v1/`;
+            const body = `${marker}\n📖 Docs preview for this PR: ${url}\n\nREST reference: ${url}/reference/rest/v1/`;
             const { data: comments } = await github.rest.issues.listComments({
               ...context.repo, issue_number: context.issue.number,
             });

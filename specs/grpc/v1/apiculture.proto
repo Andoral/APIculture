@@ -1,0 +1,173 @@
+syntax = "proto3";
+
+package apiculture.v1;
+
+option go_package = "github.com/Andoral/APIculture/gen/apiculture/v1;apiculturev1";
+
+// APIculture gRPC API. Same domain as REST: apiaries, hives, inspections.
+// Authenticate with metadata `authorization: Bearer ak_…`.
+
+enum HiveStatus {
+  HIVE_STATUS_UNSPECIFIED = 0;
+  HIVE_STATUS_ACTIVE = 1;
+  HIVE_STATUS_QUEENLESS = 2;
+  HIVE_STATUS_SWARMED = 3;
+  HIVE_STATUS_DEAD = 4;
+  HIVE_STATUS_ARCHIVED = 5;
+}
+
+enum Temperament {
+  TEMPERAMENT_UNSPECIFIED = 0;
+  TEMPERAMENT_CALM = 1;
+  TEMPERAMENT_NERVOUS = 2;
+  TEMPERAMENT_AGGRESSIVE = 3;
+}
+
+enum WebhookEventType {
+  WEBHOOK_EVENT_TYPE_UNSPECIFIED = 0;
+  WEBHOOK_EVENT_TYPE_INSPECTION_CREATED = 1;
+  WEBHOOK_EVENT_TYPE_HIVE_STATUS_CHANGED = 2;
+  WEBHOOK_EVENT_TYPE_APIARY_DELETED = 3;
+}
+
+message GeoPoint {
+  double latitude = 1;
+  double longitude = 2;
+}
+
+message Apiary {
+  string id = 1;
+  string name = 2;
+  GeoPoint location = 3;
+  int32 hive_count = 4;
+  string created_at = 5;
+}
+
+message Hive {
+  string id = 1;
+  string apiary_id = 2;
+  string label = 3;
+  HiveStatus status = 4;
+  string queen_installed_at = 5;
+  string last_inspected_at = 6;
+  string created_at = 7;
+  string updated_at = 8;
+}
+
+message Inspection {
+  string id = 1;
+  string hive_id = 2;
+  string inspected_at = 3;
+  bool queen_seen = 4;
+  int32 brood_frames = 5;
+  Temperament temperament = 6;
+  string notes = 7;
+  string created_at = 8;
+}
+
+message WebhookEndpoint {
+  string id = 1;
+  string url = 2;
+  repeated WebhookEventType events = 3;
+  string created_at = 4;
+  // Present only on CreateWebhook.
+  string secret = 5;
+}
+
+service ApiaryService {
+  rpc ListApiaries(ListApiariesRequest) returns (ListApiariesResponse);
+  rpc CreateApiary(CreateApiaryRequest) returns (Apiary);
+  rpc GetApiary(GetApiaryRequest) returns (Apiary);
+  rpc UpdateApiary(UpdateApiaryRequest) returns (Apiary);
+  rpc DeleteApiary(DeleteApiaryRequest) returns (DeleteApiaryResponse);
+}
+
+message ListApiariesRequest {
+  int32 limit = 1;
+  string cursor = 2;
+}
+message ListApiariesResponse {
+  repeated Apiary data = 1;
+  string next_cursor = 2;
+}
+message CreateApiaryRequest {
+  string name = 1;
+  GeoPoint location = 2;
+  string idempotency_key = 3;
+}
+message GetApiaryRequest {
+  string apiary_id = 1;
+}
+message UpdateApiaryRequest {
+  string apiary_id = 1;
+  string name = 2;
+  GeoPoint location = 3;
+}
+message DeleteApiaryRequest {
+  string apiary_id = 1;
+}
+message DeleteApiaryResponse {}
+
+service HiveService {
+  rpc ListHives(ListHivesRequest) returns (ListHivesResponse);
+  rpc CreateHive(CreateHiveRequest) returns (Hive);
+  rpc GetHive(GetHiveRequest) returns (Hive);
+}
+
+message ListHivesRequest {
+  string apiary_id = 1;
+  HiveStatus status = 2;
+  int32 limit = 3;
+  string cursor = 4;
+}
+message ListHivesResponse {
+  repeated Hive data = 1;
+  string next_cursor = 2;
+}
+message CreateHiveRequest {
+  string apiary_id = 1;
+  string label = 2;
+  string queen_installed_at = 3;
+  string idempotency_key = 4;
+}
+message GetHiveRequest {
+  string hive_id = 1;
+}
+
+service InspectionService {
+  rpc ListInspections(ListInspectionsRequest) returns (ListInspectionsResponse);
+  rpc CreateInspection(CreateInspectionRequest) returns (Inspection);
+}
+
+message ListInspectionsRequest {
+  string hive_id = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+message ListInspectionsResponse {
+  repeated Inspection data = 1;
+  string next_cursor = 2;
+}
+message CreateInspectionRequest {
+  string hive_id = 1;
+  string inspected_at = 2;
+  bool queen_seen = 3;
+  int32 brood_frames = 4;
+  Temperament temperament = 5;
+  string notes = 6;
+  string idempotency_key = 7;
+}
+
+service WebhookService {
+  rpc ListWebhooks(ListWebhooksRequest) returns (ListWebhooksResponse);
+  rpc CreateWebhook(CreateWebhookRequest) returns (WebhookEndpoint);
+}
+
+message ListWebhooksRequest {}
+message ListWebhooksResponse {
+  repeated WebhookEndpoint data = 1;
+}
+message CreateWebhookRequest {
+  string url = 1;
+  repeated WebhookEventType events = 2;
+}

@@ -1,0 +1,147 @@
+asyncapi: 3.0.0
+info:
+  title: APIculture WebSocket
+  version: 1.0.0
+  description: |
+    Event channels for the same apiary / hive / inspection domain as REST.
+
+    Connect with `wss://` and pass the API key as a query parameter
+    (`?token=ak_test_…`) or as the first text frame:
+
+    ```json
+    { "op": "auth", "token": "ak_test_…" }
+    ```
+
+    Subscribe by sending `{ "op": "subscribe", "channel": "hive.{id}.inspections" }`.
+    The server then pushes events. Messages are JSON; identifiers match REST (`hv_`, `in_`, …).
+  contact:
+    name: APIculture developer support
+    url: https://github.com/Andoral/APIculture/issues
+  license:
+    name: Apache 2.0
+
+servers:
+  local:
+    host: 127.0.0.1:8787
+    pathname: /v1
+    protocol: ws
+    description: Local sandbox (`npm run sandbox`)
+  sandbox:
+    host: sandbox.ws.apiculture.example
+    pathname: /v1
+    protocol: wss
+    description: Hosted sandbox (documentation default)
+  production:
+    host: ws.apiculture.example
+    pathname: /v1
+    protocol: wss
+    description: Production
+
+channels:
+  hiveInspections:
+    address: hive.{hiveId}.inspections
+    description: Inspection events for a single hive.
+    parameters:
+      hiveId:
+        description: Hive identifier (`hv_` + ULID).
+    messages:
+      inspectionCreated:
+        $ref: '#/components/messages/InspectionCreated'
+  hiveStatus:
+    address: hive.{hiveId}.status
+    description: Lifecycle transitions of a hive. See Hive lifecycle on the Architecture page.
+    parameters:
+      hiveId:
+        description: Hive identifier (`hv_` + ULID).
+    messages:
+      hiveStatusChanged:
+        $ref: '#/components/messages/HiveStatusChanged'
+  apiaryDeleted:
+    address: apiary.{apiaryId}.deleted
+    description: Fired when an apiary is deleted.
+    parameters:
+      apiaryId:
+        description: Apiary identifier (`ap_` + ULID).
+    messages:
+      apiaryDeleted:
+        $ref: '#/components/messages/ApiaryDeleted'
+  control:
+    address: control
+    description: Client control frames (auth, subscribe, unsubscribe, ping).
+    messages:
+      clientOp:
+        $ref: '#/components/messages/ClientOp'
+
+operations:
+  sendControl:
+    action: send
+    channel:
+      $ref: '#/channels/control'
+    summary: Auth, subscribe, unsubscribe, ping
+  receiveInspectionCreated:
+    action: receive
+    channel:
+      $ref: '#/channels/hiveInspections'
+    summary: Inspection created
+  receiveHiveStatusChanged:
+    action: receive
+    channel:
+      $ref: '#/channels/hiveStatus'
+    summary: Hive status changed
+  receiveApiaryDeleted:
+    action: receive
+    channel:
+      $ref: '#/channels/apiaryDeleted'
+    summary: Apiary deleted
+
+components:
+  messages:
+    ClientOp:
+      name: client.op
+      title: Client control frame
+      payload:
+        type: object
+        required: [op]
+        properties:
+          op:
+            type: string
+            enum: [auth, subscribe, unsubscribe, ping]
+          token:
+            type: string
+            description: Required when `op` is `auth`.
+          channel:
+            type: string
+            description: Required when `op` is `subscribe` or `unsubscribe`.
+    InspectionCreated:
+      name: inspection.created
+      title: Inspection created
+      payload:
+        $ref: '#/components/schemas/EventEnvelope'
+    HiveStatusChanged:
+      name: hive.status_changed
+      title: Hive status changed
+      payload:
+        $ref: '#/components/schemas/EventEnvelope'
+    ApiaryDeleted:
+      name: apiary.deleted
+      title: Apiary deleted
+      payload:
+        $ref: '#/components/schemas/EventEnvelope'
+  schemas:
+    EventEnvelope:
+      type: object
+      required: [id, type, created_at, data]
+      properties:
+        id:
+          type: string
+          description: Unique event id; use it for de-duplication.
+        type:
+          type: string
+          enum: [inspection.created, hive.status_changed, apiary.deleted]
+        created_at:
+          type: string
+          format: date-time
+        data:
+          type: object
+          additionalProperties: true
+          description: The resource the event is about.
