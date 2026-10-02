@@ -39,9 +39,6 @@ export default defineConfig({
 			social: [
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/Andoral/APIculture' },
 			],
-			editLink: {
-				baseUrl: 'https://github.com/Andoral/APIculture/edit/main/',
-			},
 			lastUpdated: true,
 			customCss: ['./src/styles/custom.css'],
 			sidebar: [

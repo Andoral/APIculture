@@ -149,9 +149,6 @@ const aIn = attrs(inspection.x, inspection.y);
 			<text class="erd__attr erd__attr--muted" x={aIn[4].x} y={aIn[4].y}>append-only</text>
 		</g>
 	</svg>
-	<figcaption class="arch__figcaption">
-		Crow’s-foot ERD: <span class="erd-key">‖</span> one, <span class="erd-key">○&lt;</span> zero-or-many. A hive belongs to exactly one apiary. Inspections are append-only.
-	</figcaption>
 </figure>
 
 <style>
@@ -217,15 +214,6 @@ const aIn = attrs(inspection.x, inspection.y);
 		fill: var(--sl-color-gray-6);
 		stroke: var(--sl-color-gray-3);
 		stroke-width: 1.75;
-	}
-	.arch__figcaption {
-		margin-top: 0.6rem;
-		color: var(--sl-color-gray-2);
-		font-size: var(--sl-text-sm);
-	}
-	.erd-key {
-		font-family: var(--sl-font-system-mono, ui-monospace, monospace);
-		color: var(--sl-color-gray-1);
 	}
 
 	:root[data-theme='light'] .arch__box {

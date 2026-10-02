@@ -3,6 +3,7 @@
 	--sl-color-accent-low: #3a2a00;
 	--sl-color-accent: #b07a00;
 	--sl-color-accent-high: #f3d38a;
+	--apiculture-on-accent: #3a2e00;
 }
 
 :root[data-theme='light'] {

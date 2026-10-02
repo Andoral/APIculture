@@ -6,11 +6,12 @@ description: 'How APIculture is structured: client–server architecture, the da
 import ArchitectureDiagram from '../../components/ArchitectureDiagram.astro';
 import DataModelDiagram from '../../components/DataModelDiagram.astro';
 import HiveLifecycleDiagram from '../../components/HiveLifecycleDiagram.astro';
+import QuickstartMenu from '../../components/QuickstartMenu.astro';
 import { LinkButton, LinkCard, CardGrid } from '@astrojs/starlight/components';
 
 APIculture is a developer portal for the same apiary / hive / inspection domain, exposed through several API styles. Each style has its own machine-readable contract.
 
-<LinkButton href="/rest/quickstart/" icon="right-arrow">REST quickstart</LinkButton>
+<QuickstartMenu />
 <LinkButton href="/reference/" variant="minimal" icon="open-book">All specifications</LinkButton>
 
 ## Architecture
