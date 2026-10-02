@@ -30,28 +30,27 @@ const styles = [
 
 <script>
 	document.querySelectorAll('[data-qs-picker]').forEach((root) => {
-		const button = root.querySelector('.qs-picker__button') as HTMLButtonElement | null;
-		const menu = root.querySelector('.qs-picker__menu') as HTMLElement | null;
-		if (!button || !menu) return;
+		const button = root.querySelector('.qs-picker__button');
+		const menu = root.querySelector('.qs-picker__menu');
+		if (!(button instanceof HTMLButtonElement) || !(menu instanceof HTMLElement)) return;
 
-		function setOpen(open: boolean) {
+		const setOpen = (open: boolean) => {
 			button.setAttribute('aria-expanded', String(open));
 			menu.hidden = !open;
 			root.classList.toggle('is-open', open);
-		}
+		};
 
 		button.addEventListener('click', (event) => {
 			event.stopPropagation();
-			setOpen(menu.hidden);
+			setOpen(menu.hasAttribute('hidden'));
 		});
 		document.addEventListener('click', (event) => {
 			if (!root.contains(event.target as Node)) setOpen(false);
 		});
 		root.addEventListener('keydown', (event) => {
-			if (event.key === 'Escape') {
-				setOpen(false);
-				button.focus();
-			}
+			if (!(event instanceof KeyboardEvent) || event.key !== 'Escape') return;
+			setOpen(false);
+			button.focus();
 		});
 	});
 </script>
