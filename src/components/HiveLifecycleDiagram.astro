@@ -1,0 +1,146 @@
+---
+/**
+ * Hive status transitions. Visual language matches ArchitectureDiagram.
+ */
+---
+
+<figure class="arch">
+	<svg
+		class="arch__svg"
+		viewBox="0 0 920 590"
+		role="img"
+		aria-labelledby="life-title life-desc"
+	>
+		<title id="life-title">Hive lifecycle transitions</title>
+		<desc id="life-desc">
+			A hive is created in the active status. From active it may become queenless
+			or swarmed. A swarmed hive can return to active when a new queen is
+			accepted. Queenless and swarmed may move to dead, and dead to archived.
+			Archived is terminal.
+		</desc>
+
+		<defs>
+			<marker id="life-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+				<path d="M 0 1.5 L 9 5 L 0 8.5 z" class="arch__arrowhead" />
+			</marker>
+		</defs>
+
+		<!-- create → active -->
+		<text class="arch__caption" x="460" y="22" text-anchor="middle">create</text>
+		<line class="arch__line" x1="460" y1="28" x2="460" y2="48" marker-end="url(#life-arrow)" />
+
+		<!-- active -->
+		<rect class="arch__box arch__box--accent" x="360" y="48" width="200" height="88" rx="14" />
+		<text class="arch__kicker" x="460" y="78" text-anchor="middle">Status</text>
+		<text class="arch__label" x="460" y="106" text-anchor="middle">active</text>
+		<text class="arch__sub" x="460" y="126" text-anchor="middle">default on create</text>
+
+		<!-- queenless -->
+		<rect class="arch__box" x="140" y="200" width="200" height="88" rx="14" />
+		<text class="arch__kicker" x="240" y="230" text-anchor="middle">Status</text>
+		<text class="arch__label" x="240" y="258" text-anchor="middle">queenless</text>
+		<text class="arch__sub" x="240" y="278" text-anchor="middle">no queen, no eggs</text>
+
+		<!-- swarmed -->
+		<rect class="arch__box" x="580" y="200" width="200" height="88" rx="14" />
+		<text class="arch__kicker" x="680" y="230" text-anchor="middle">Status</text>
+		<text class="arch__label" x="680" y="258" text-anchor="middle">swarmed</text>
+		<text class="arch__sub" x="680" y="278" text-anchor="middle">colony left</text>
+
+		<!-- dead -->
+		<rect class="arch__box" x="360" y="352" width="200" height="88" rx="14" />
+		<text class="arch__kicker" x="460" y="382" text-anchor="middle">Status</text>
+		<text class="arch__label" x="460" y="410" text-anchor="middle">dead</text>
+		<text class="arch__sub" x="460" y="430" text-anchor="middle">colony died</text>
+
+		<!-- archived -->
+		<rect class="arch__box" x="360" y="496" width="200" height="88" rx="14" />
+		<text class="arch__kicker" x="460" y="526" text-anchor="middle">Status</text>
+		<text class="arch__label" x="460" y="554" text-anchor="middle">archived</text>
+		<text class="arch__sub" x="460" y="574" text-anchor="middle">terminal · hidden</text>
+
+		<!-- active → queenless / swarmed -->
+		<line class="arch__line" x1="400" y1="136" x2="260" y2="200" marker-end="url(#life-arrow)" />
+		<text class="arch__caption" x="300" y="160" text-anchor="middle">no queen / no eggs</text>
+		<line class="arch__line" x1="520" y1="136" x2="660" y2="200" marker-end="url(#life-arrow)" />
+		<text class="arch__caption" x="620" y="160" text-anchor="middle">colony left</text>
+
+		<!-- swarmed → active (new queen) -->
+		<path class="arch__line" d="M 780 244 L 844 244 L 844 92 L 560 92" marker-end="url(#life-arrow)" fill="none" />
+		<text class="arch__caption" x="832" y="176" text-anchor="end">new queen accepted</text>
+
+		<!-- queenless / swarmed → dead -->
+		<line class="arch__line" x1="280" y1="288" x2="400" y2="352" marker-end="url(#life-arrow)" />
+		<line class="arch__line" x1="640" y1="288" x2="520" y2="352" marker-end="url(#life-arrow)" />
+
+		<!-- dead → archived -->
+		<line class="arch__line" x1="460" y1="440" x2="460" y2="496" marker-end="url(#life-arrow)" />
+	</svg>
+	<figcaption class="arch__figcaption">
+		Hive status is set by the beekeeper (REST: <code>PATCH /hives/&#123;hiveId&#125;</code>). The API never infers a transition from an inspection. <code>archived</code> is terminal.
+	</figcaption>
+</figure>
+
+<style>
+	.arch {
+		margin: 1.25rem 0 0.25rem;
+	}
+	.arch__svg {
+		display: block;
+		width: 100%;
+		height: auto;
+		overflow: visible;
+	}
+	.arch__box {
+		fill: var(--sl-color-gray-6);
+		stroke: var(--sl-color-gray-4);
+		stroke-width: 1.5;
+	}
+	.arch__box--accent {
+		fill: var(--sl-color-accent-low);
+		stroke: var(--sl-color-accent);
+	}
+	.arch__kicker {
+		fill: var(--sl-color-accent-high);
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+	}
+	.arch__label {
+		fill: var(--sl-color-white);
+		font-size: 16px;
+		font-weight: 650;
+	}
+	.arch__sub {
+		fill: var(--sl-color-gray-2);
+		font-size: 12px;
+	}
+	.arch__caption {
+		fill: var(--sl-color-gray-2);
+		font-size: 11px;
+	}
+	.arch__line {
+		stroke: var(--sl-color-gray-3);
+		stroke-width: 1.75;
+	}
+	.arch__arrowhead {
+		fill: var(--sl-color-gray-3);
+	}
+	.arch__figcaption {
+		margin-top: 0.6rem;
+		color: var(--sl-color-gray-2);
+		font-size: var(--sl-text-sm);
+	}
+	.arch__figcaption code {
+		font-size: 0.85em;
+	}
+
+	:root[data-theme='light'] .arch__box {
+		fill: var(--sl-color-gray-7);
+		stroke: var(--sl-color-gray-4);
+	}
+	:root[data-theme='light'] .arch__label {
+		fill: var(--sl-color-gray-1);
+	}
+</style>

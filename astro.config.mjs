@@ -72,7 +72,7 @@ export default defineConfig({
 					items: [
 						{ label: 'Overview', slug: 'soap' },
 						{ label: 'Quickstart', slug: 'soap/quickstart' },
-						{ label: 'Reference', slug: 'soap/reference' },
+						{ label: 'Reference v1', slug: 'soap/reference', badge: { text: 'WSDL', variant: 'note' } },
 					],
 				},
 				{
@@ -80,7 +80,7 @@ export default defineConfig({
 					items: [
 						{ label: 'Overview', slug: 'rpc' },
 						{ label: 'Quickstart', slug: 'rpc/quickstart' },
-						{ label: 'Reference', slug: 'rpc/reference' },
+						{ label: 'Reference v1', slug: 'rpc/reference', badge: { text: 'OpenRPC', variant: 'note' } },
 					],
 				},
 				{
@@ -88,7 +88,7 @@ export default defineConfig({
 					items: [
 						{ label: 'Overview', slug: 'grpc' },
 						{ label: 'Quickstart', slug: 'grpc/quickstart' },
-						{ label: 'Reference', slug: 'grpc/reference' },
+						{ label: 'Reference v1', slug: 'grpc/reference', badge: { text: 'Protobuf', variant: 'note' } },
 					],
 				},
 				{
@@ -96,7 +96,7 @@ export default defineConfig({
 					items: [
 						{ label: 'Overview', slug: 'graphql' },
 						{ label: 'Quickstart', slug: 'graphql/quickstart' },
-						{ label: 'Reference', slug: 'graphql/reference' },
+						{ label: 'Reference v1', slug: 'graphql/reference', badge: { text: 'SDL', variant: 'note' } },
 					],
 				},
 				{
@@ -104,9 +104,9 @@ export default defineConfig({
 					items: [
 						{ label: 'Overview', slug: 'websocket' },
 						{ label: 'Quickstart', slug: 'websocket/quickstart' },
-						{ label: 'Reference', slug: 'websocket/reference' },
+						{ label: 'Reference v1', slug: 'websocket/reference', badge: { text: 'AsyncAPI', variant: 'note' } },
 						{
-							label: 'AsyncAPI explorer',
+							label: 'Explorer v1',
 							link: withBase('/reference/websocket/v1/'),
 							badge: { text: 'Scalar', variant: 'note' },
 						},

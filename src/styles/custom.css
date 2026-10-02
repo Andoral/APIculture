@@ -6,7 +6,26 @@
 }
 
 :root[data-theme='light'] {
-	--sl-color-accent-low: #fbe9b8;
-	--sl-color-accent: #8a5f00;
-	--sl-color-accent-high: #3f2b00;
+	--sl-color-accent-low: #fff4b0;
+	--sl-color-accent: #f5c400;
+	--sl-color-accent-high: #534400;
+	/* Links on white: darker gold, still yellow-hued (not the button fill). */
+	--sl-color-text-accent: #8d7200;
+	--apiculture-on-accent: #3a2e00;
+}
+
+/* Starlight paints primary chrome with --sl-color-text-accent, not --sl-color-accent.
+   Keep links darker gold; fill buttons and the current nav item with honey yellow
+   and dark text so labels stay readable. */
+:root[data-theme='light'] .sl-link-button.primary,
+:root[data-theme='light'] .sl-link-button.primary:hover,
+:root[data-theme='light'] nav.sidebar a[aria-current='page'],
+:root[data-theme='light'] nav.sidebar [aria-current='page'] {
+	color: var(--apiculture-on-accent);
+	background-color: var(--sl-color-accent);
+}
+
+:root[data-theme='light'] .sl-link-button.primary:hover,
+:root[data-theme='light'] nav.sidebar a[aria-current='page']:hover {
+	background-color: #e8b800;
 }

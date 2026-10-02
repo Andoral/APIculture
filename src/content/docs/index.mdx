@@ -4,23 +4,14 @@ description: 'How APIculture is structured: client–server architecture, the da
 ---
 
 import ArchitectureDiagram from '../../components/ArchitectureDiagram.astro';
+import DataModelDiagram from '../../components/DataModelDiagram.astro';
+import HiveLifecycleDiagram from '../../components/HiveLifecycleDiagram.astro';
 import { LinkButton, LinkCard, CardGrid } from '@astrojs/starlight/components';
 
 APIculture is a developer portal for the same apiary / hive / inspection domain, exposed through several API styles. Each style has its own machine-readable contract.
 
 <LinkButton href="/rest/quickstart/" icon="right-arrow">REST quickstart</LinkButton>
 <LinkButton href="/reference/" variant="minimal" icon="open-book">All specifications</LinkButton>
-
-## API styles
-
-<CardGrid>
-	<LinkCard title="REST" href="/rest/" description="OpenAPI 3.1 · JSON over HTTPS. Scalar reference." />
-	<LinkCard title="SOAP" href="/soap/" description="WSDL · XML document/literal." />
-	<LinkCard title="JSON-RPC" href="/rpc/" description="OpenRPC · named procedures over HTTPS." />
-	<LinkCard title="gRPC" href="/grpc/" description="Protocol Buffers · typed services. grpcurl." />
-	<LinkCard title="GraphQL" href="/graphql/" description="SDL · typed graph, Relay pagination." />
-	<LinkCard title="WebSocket" href="/websocket/" description="AsyncAPI · live event channels." />
-</CardGrid>
 
 ## Architecture
 
@@ -53,17 +44,22 @@ Browsers and mobile apps must **not** hold a key — they would expose it. Call 
 
 The [local sandbox](/getting-started/sandbox/) has the same HTTP surface as the contracts, uses isolated in-memory data per key, and never sends real webhook POSTs. The `*.apiculture.example` hosts are documentation defaults, not this repository.
 
+## API styles
+
+<CardGrid>
+	<LinkCard title="REST" href="/rest/" description="OpenAPI 3.1 · JSON over HTTPS. Scalar reference." />
+	<LinkCard title="SOAP" href="/soap/" description="WSDL · XML document/literal." />
+	<LinkCard title="JSON-RPC" href="/rpc/" description="OpenRPC · named procedures over HTTPS." />
+	<LinkCard title="gRPC" href="/grpc/" description="Protocol Buffers · typed services. grpcurl." />
+	<LinkCard title="GraphQL" href="/graphql/" description="SDL · typed graph, Relay pagination." />
+	<LinkCard title="WebSocket" href="/websocket/" description="AsyncAPI · live event channels." />
+</CardGrid>
+
 ## Data model
 
 The API is organised around three resources owned by an **account** (the beekeeper or organisation that owns the API key).
 
-```text
-Account
-├── Apiary (1..n)
-│   └── Hive (0..n)
-│       └── Inspection (0..n, append-only)
-└── Webhook endpoint (0..n)
-```
+<DataModelDiagram />
 
 | Resource | Identifier prefix | Description |
 | --- | --- | --- |
@@ -102,25 +98,7 @@ Every hive has a `status` field describing the state of the colony.
 
 ### Transitions
 
-```text
-              ┌──────────────┐
-   create ──▶ │    active    │ ◀─────────────┐
-              └──────┬───────┘               │ new queen accepted
-        no queen /   │   \  colony left      │
-        no eggs      ▼    ▼                  │
-        ┌────────────┐  ┌────────────┐       │
-        │  queenless │  │  swarmed   │ ──────┘
-        └─────┬──────┘  └─────┬──────┘
-              │               │
-              ▼               ▼
-              ┌──────────────┐
-              │     dead     │
-              └──────┬───────┘
-                     ▼
-              ┌──────────────┐
-              │   archived   │
-              └──────────────┘
-```
+<HiveLifecycleDiagram />
 
 - Status changes are made by the beekeeper in the app or via the API (REST: `PATCH /hives/{hiveId}`); the API never changes a status on its own based on inspection data.
 - `archived` is terminal. Archived hives are excluded from default lists unless asked for explicitly.

@@ -1,0 +1,244 @@
+---
+/**
+ * Crow’s-foot ERD of the apiary domain. Same visual tokens as ArchitectureDiagram.
+ */
+const BOX = { w: 216, h: 152, head: 36, attr: 18 };
+const account = { x: 48, y: 24 };
+const webhook = { x: 656, y: 24 };
+const apiary = { x: 48, y: 220 };
+const hive = { x: 352, y: 220 };
+const inspection = { x: 656, y: 220 };
+
+function attrs(x: number, y: number) {
+	const left = x + 16;
+	const top = y + BOX.head + 22;
+	return [0, 1, 2, 3, 4].map((i) => ({ x: left, y: top + i * BOX.attr }));
+}
+const aAcc = attrs(account.x, account.y);
+const aWh = attrs(webhook.x, webhook.y);
+const aAp = attrs(apiary.x, apiary.y);
+const aHv = attrs(hive.x, hive.y);
+const aIn = attrs(inspection.x, inspection.y);
+---
+
+<figure class="arch">
+	<svg
+		class="arch__svg"
+		viewBox="0 0 920 400"
+		role="img"
+		aria-labelledby="model-title model-desc"
+	>
+		<title id="model-title">APIculture entity-relationship diagram</title>
+		<desc id="model-desc">
+			Crow’s-foot ERD. An account has many apiaries and many webhook endpoints.
+			An apiary has many hives. A hive has many append-only inspections.
+		</desc>
+
+		<!-- Account 1 ── * Webhook -->
+		<line class="arch__line" x1={account.x + BOX.w + 10} y1={account.y + 76} x2={webhook.x - 16} y2={webhook.y + 76} />
+		<g class="erd__one" transform={`translate(${account.x + BOX.w}, ${account.y + 76})`}>
+			<line x1="0" y1="-7" x2="0" y2="7" />
+			<line x1="5" y1="-7" x2="5" y2="7" />
+		</g>
+		<g class="erd__many" transform={`translate(${webhook.x}, ${webhook.y + 76})`}>
+			<circle class="erd__optional" cx="-18" cy="0" r="3.5" />
+			<line x1="-12" y1="-7" x2="0" y2="0" />
+			<line x1="-12" y1="0" x2="0" y2="0" />
+			<line x1="-12" y1="7" x2="0" y2="0" />
+		</g>
+
+		<!-- Account 1 ── * Apiary -->
+		<line class="arch__line" x1={account.x + BOX.w / 2} y1={account.y + BOX.h + 2} x2={apiary.x + BOX.w / 2} y2={apiary.y - 14} />
+		<g class="erd__one" transform={`translate(${account.x + BOX.w / 2}, ${account.y + BOX.h})`}>
+			<line x1="-7" y1="0" x2="7" y2="0" />
+			<line x1="-7" y1="5" x2="7" y2="5" />
+		</g>
+		<g class="erd__many" transform={`translate(${apiary.x + BOX.w / 2}, ${apiary.y})`}>
+			<circle class="erd__optional" cx="0" cy="-18" r="3.5" />
+			<line x1="-7" y1="-12" x2="0" y2="0" />
+			<line x1="0" y1="-12" x2="0" y2="0" />
+			<line x1="7" y1="-12" x2="0" y2="0" />
+		</g>
+
+		<!-- Apiary 1 ── * Hive -->
+		<line class="arch__line" x1={apiary.x + BOX.w + 10} y1={apiary.y + 76} x2={hive.x - 16} y2={hive.y + 76} />
+		<g class="erd__one" transform={`translate(${apiary.x + BOX.w}, ${apiary.y + 76})`}>
+			<line x1="0" y1="-7" x2="0" y2="7" />
+			<line x1="5" y1="-7" x2="5" y2="7" />
+		</g>
+		<g class="erd__many" transform={`translate(${hive.x}, ${hive.y + 76})`}>
+			<circle class="erd__optional" cx="-18" cy="0" r="3.5" />
+			<line x1="-12" y1="-7" x2="0" y2="0" />
+			<line x1="-12" y1="0" x2="0" y2="0" />
+			<line x1="-12" y1="7" x2="0" y2="0" />
+		</g>
+
+		<!-- Hive 1 ── * Inspection -->
+		<line class="arch__line" x1={hive.x + BOX.w + 10} y1={hive.y + 76} x2={inspection.x - 16} y2={inspection.y + 76} />
+		<g class="erd__one" transform={`translate(${hive.x + BOX.w}, ${hive.y + 76})`}>
+			<line x1="0" y1="-7" x2="0" y2="7" />
+			<line x1="5" y1="-7" x2="5" y2="7" />
+		</g>
+		<g class="erd__many" transform={`translate(${inspection.x}, ${inspection.y + 76})`}>
+			<circle class="erd__optional" cx="-18" cy="0" r="3.5" />
+			<line x1="-12" y1="-7" x2="0" y2="0" />
+			<line x1="-12" y1="0" x2="0" y2="0" />
+			<line x1="-12" y1="7" x2="0" y2="0" />
+		</g>
+
+		<!-- Account -->
+		<g>
+			<rect class="arch__box" x={account.x} y={account.y} width={BOX.w} height={BOX.h} rx="12" />
+			<path class="erd__head erd__head--accent" d={`M ${account.x} ${account.y + 12} A 12 12 0 0 1 ${account.x + 12} ${account.y} H ${account.x + BOX.w - 12} A 12 12 0 0 1 ${account.x + BOX.w} ${account.y + 12} V ${account.y + BOX.head} H ${account.x} Z`} />
+			<line class="erd__rule" x1={account.x} y1={account.y + BOX.head} x2={account.x + BOX.w} y2={account.y + BOX.head} />
+			<text class="arch__kicker" x={account.x + 16} y={account.y + 24}>Account</text>
+			<text class="erd__attr erd__attr--pk" x={aAcc[0].x} y={aAcc[0].y}>PK&ensp;key</text>
+			<text class="erd__attr" x={aAcc[1].x} y={aAcc[1].y}>env</text>
+			<text class="erd__attr erd__attr--muted" x={aAcc[2].x} y={aAcc[2].y}>not a REST resource</text>
+		</g>
+
+		<!-- Webhook -->
+		<g>
+			<rect class="arch__box" x={webhook.x} y={webhook.y} width={BOX.w} height={BOX.h} rx="12" />
+			<path class="erd__head" d={`M ${webhook.x} ${webhook.y + 12} A 12 12 0 0 1 ${webhook.x + 12} ${webhook.y} H ${webhook.x + BOX.w - 12} A 12 12 0 0 1 ${webhook.x + BOX.w} ${webhook.y + 12} V ${webhook.y + BOX.head} H ${webhook.x} Z`} />
+			<line class="erd__rule" x1={webhook.x} y1={webhook.y + BOX.head} x2={webhook.x + BOX.w} y2={webhook.y + BOX.head} />
+			<text class="arch__kicker" x={webhook.x + 16} y={webhook.y + 24}>Webhook</text>
+			<text class="erd__attr erd__attr--pk" x={aWh[0].x} y={aWh[0].y}>PK&ensp;id&emsp;wh_</text>
+			<text class="erd__attr" x={aWh[1].x} y={aWh[1].y}>url</text>
+			<text class="erd__attr" x={aWh[2].x} y={aWh[2].y}>events</text>
+			<text class="erd__attr" x={aWh[3].x} y={aWh[3].y}>created_at</text>
+			<text class="erd__attr erd__attr--muted" x={aWh[4].x} y={aWh[4].y}>secret&ensp;(create only)</text>
+		</g>
+
+		<!-- Apiary -->
+		<g>
+			<rect class="arch__box" x={apiary.x} y={apiary.y} width={BOX.w} height={BOX.h} rx="12" />
+			<path class="erd__head" d={`M ${apiary.x} ${apiary.y + 12} A 12 12 0 0 1 ${apiary.x + 12} ${apiary.y} H ${apiary.x + BOX.w - 12} A 12 12 0 0 1 ${apiary.x + BOX.w} ${apiary.y + 12} V ${apiary.y + BOX.head} H ${apiary.x} Z`} />
+			<line class="erd__rule" x1={apiary.x} y1={apiary.y + BOX.head} x2={apiary.x + BOX.w} y2={apiary.y + BOX.head} />
+			<text class="arch__kicker" x={apiary.x + 16} y={apiary.y + 24}>Apiary</text>
+			<text class="erd__attr erd__attr--pk" x={aAp[0].x} y={aAp[0].y}>PK&ensp;id&emsp;ap_</text>
+			<text class="erd__attr" x={aAp[1].x} y={aAp[1].y}>name</text>
+			<text class="erd__attr" x={aAp[2].x} y={aAp[2].y}>location</text>
+			<text class="erd__attr" x={aAp[3].x} y={aAp[3].y}>hive_count</text>
+			<text class="erd__attr" x={aAp[4].x} y={aAp[4].y}>created_at</text>
+		</g>
+
+		<!-- Hive -->
+		<g>
+			<rect class="arch__box" x={hive.x} y={hive.y} width={BOX.w} height={BOX.h} rx="12" />
+			<path class="erd__head" d={`M ${hive.x} ${hive.y + 12} A 12 12 0 0 1 ${hive.x + 12} ${hive.y} H ${hive.x + BOX.w - 12} A 12 12 0 0 1 ${hive.x + BOX.w} ${hive.y + 12} V ${hive.y + BOX.head} H ${hive.x} Z`} />
+			<line class="erd__rule" x1={hive.x} y1={hive.y + BOX.head} x2={hive.x + BOX.w} y2={hive.y + BOX.head} />
+			<text class="arch__kicker" x={hive.x + 16} y={hive.y + 24}>Hive</text>
+			<text class="erd__attr erd__attr--pk" x={aHv[0].x} y={aHv[0].y}>PK&ensp;id&emsp;hv_</text>
+			<text class="erd__attr erd__attr--fk" x={aHv[1].x} y={aHv[1].y}>FK&ensp;apiary_id</text>
+			<text class="erd__attr" x={aHv[2].x} y={aHv[2].y}>label</text>
+			<text class="erd__attr" x={aHv[3].x} y={aHv[3].y}>status</text>
+			<text class="erd__attr" x={aHv[4].x} y={aHv[4].y}>last_inspected_at</text>
+		</g>
+
+		<!-- Inspection -->
+		<g>
+			<rect class="arch__box" x={inspection.x} y={inspection.y} width={BOX.w} height={BOX.h} rx="12" />
+			<path class="erd__head" d={`M ${inspection.x} ${inspection.y + 12} A 12 12 0 0 1 ${inspection.x + 12} ${inspection.y} H ${inspection.x + BOX.w - 12} A 12 12 0 0 1 ${inspection.x + BOX.w} ${inspection.y + 12} V ${inspection.y + BOX.head} H ${inspection.x} Z`} />
+			<line class="erd__rule" x1={inspection.x} y1={inspection.y + BOX.head} x2={inspection.x + BOX.w} y2={inspection.y + BOX.head} />
+			<text class="arch__kicker" x={inspection.x + 16} y={inspection.y + 24}>Inspection</text>
+			<text class="erd__attr erd__attr--pk" x={aIn[0].x} y={aIn[0].y}>PK&ensp;id&emsp;in_</text>
+			<text class="erd__attr erd__attr--fk" x={aIn[1].x} y={aIn[1].y}>FK&ensp;hive_id</text>
+			<text class="erd__attr" x={aIn[2].x} y={aIn[2].y}>inspected_at</text>
+			<text class="erd__attr" x={aIn[3].x} y={aIn[3].y}>queen_seen</text>
+			<text class="erd__attr erd__attr--muted" x={aIn[4].x} y={aIn[4].y}>append-only</text>
+		</g>
+	</svg>
+	<figcaption class="arch__figcaption">
+		Crow’s-foot ERD: <span class="erd-key">‖</span> one, <span class="erd-key">○&lt;</span> zero-or-many. A hive belongs to exactly one apiary. Inspections are append-only.
+	</figcaption>
+</figure>
+
+<style>
+	.arch {
+		margin: 1.25rem 0 0.25rem;
+	}
+	.arch__svg {
+		display: block;
+		width: 100%;
+		height: auto;
+		overflow: visible;
+	}
+	.arch__box {
+		fill: var(--sl-color-gray-6);
+		stroke: var(--sl-color-gray-4);
+		stroke-width: 1.5;
+	}
+	.erd__head {
+		fill: var(--sl-color-gray-5);
+	}
+	.erd__head--accent {
+		fill: var(--sl-color-accent-low);
+	}
+	.erd__rule {
+		stroke: var(--sl-color-gray-4);
+		stroke-width: 1.25;
+	}
+	.arch__kicker {
+		fill: var(--sl-color-accent-high);
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+	}
+	.erd__attr {
+		fill: var(--sl-color-white);
+		font-family: var(--sl-font-system-mono, ui-monospace, monospace);
+		font-size: 11px;
+	}
+	.erd__attr--pk {
+		fill: var(--sl-color-accent-high);
+		font-weight: 650;
+	}
+	.erd__attr--fk {
+		fill: var(--sl-color-gray-1);
+	}
+	.erd__attr--muted {
+		fill: var(--sl-color-gray-2);
+	}
+	.arch__line,
+	.erd__one,
+	.erd__many {
+		stroke: var(--sl-color-gray-3);
+		stroke-width: 1.75;
+		fill: none;
+	}
+	.erd__one line,
+	.erd__many line {
+		stroke: inherit;
+		stroke-width: inherit;
+	}
+	.erd__optional {
+		fill: var(--sl-color-gray-6);
+		stroke: var(--sl-color-gray-3);
+		stroke-width: 1.75;
+	}
+	.arch__figcaption {
+		margin-top: 0.6rem;
+		color: var(--sl-color-gray-2);
+		font-size: var(--sl-text-sm);
+	}
+	.erd-key {
+		font-family: var(--sl-font-system-mono, ui-monospace, monospace);
+		color: var(--sl-color-gray-1);
+	}
+
+	:root[data-theme='light'] .arch__box {
+		fill: var(--sl-color-gray-7);
+		stroke: var(--sl-color-gray-4);
+	}
+	:root[data-theme='light'] .erd__head {
+		fill: var(--sl-color-gray-6);
+	}
+	:root[data-theme='light'] .erd__attr {
+		fill: var(--sl-color-gray-1);
+	}
+	:root[data-theme='light'] .erd__optional {
+		fill: var(--sl-color-gray-7);
+	}
+</style>
