@@ -46,6 +46,7 @@ Every REST error response uses `Content-Type: application/problem+json` and the 
 | `unauthenticated` | 401 | Missing, invalid or revoked API key; or a key used against the wrong environment. | Check the key and the host. |
 | `not_found` | 404 | The resource does not exist or belongs to another account. | Verify the identifier. |
 | `apiary_not_empty` | 409 | Attempt to delete an apiary that still has hives. | Move or delete the hives first. |
+| `endpoint_sunset` | 410 | The endpoint (or behaviour) has passed its [sunset date](/resources/versioning/#deprecation-process). | Stop calling it; migrate using the Changelog and the replacement in the reference. |
 | `validation_failed` | 422 | Request is well-formed but violates a rule. Details in `errors`. | Fix the listed fields. |
 | `idempotency_key_reused` | 422 | Same `Idempotency-Key` sent with a different body. | Use a new key for a new request. |
 | `rate_limited` | 429 | Too many requests. | Wait for `Retry-After`, then retry. |

@@ -29,6 +29,7 @@ export default defineConfig({
 		'/guides/idempotency': '/rest/guides/idempotency',
 		'/guides/webhooks': '/rest/guides/webhooks',
 		'/guides/rate-limits': '/rest/guides/rate-limits',
+		'/terms': '/resources/terms',
 	},
 	integrations: [
 		starlight({
@@ -41,6 +42,9 @@ export default defineConfig({
 			],
 			lastUpdated: true,
 			customCss: ['./src/styles/custom.css'],
+			components: {
+				Pagination: './src/components/Pagination.astro',
+			},
 			sidebar: [
 				{
 					label: 'Getting Started',
@@ -116,6 +120,7 @@ export default defineConfig({
 						{ label: 'Errors', slug: 'resources/errors' },
 						{ label: 'Versioning & deprecation', slug: 'resources/versioning' },
 						{ label: 'SDKs', slug: 'resources/sdks' },
+						{ label: 'Terms of Service', slug: 'resources/terms' },
 						{ label: 'Changelog', slug: 'changelog' },
 					],
 				},

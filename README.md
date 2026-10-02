@@ -1,19 +1,33 @@
-# APIculture — API documentation portal
+# APIculture — Документация API
 
-Developer documentation for APIculture, built as **docs-as-code**. The same apiary / hive / inspection domain is exposed through several API styles. Each style has a machine-readable contract in `specs/`, a quickstart and a human-readable reference. REST and WebSocket also have a Scalar explorer.
+Данный проект отображает видение автора как должна выглядеть необходимая и достаточная документация по API для разработчиков, аналитиков и других заинтересованных лиц по работе с проектом.
 
-## Stack
+Документация создана по методу docs-as-code, одна предметная область описана несколькими стилями API.
 
-| Concern | Tool | Why |
+Документация представлена в виде нескольких разделов:
+1. Вступление -- основная информация по проекту, а именно, архитектура, основные URL, API стили, структура данных и Статусы
+2. Описание API стиля -- начальная информация для работы с API и методы
+3. Ресурсы -- общие материалы про весь портал, такие как спецификации, форматы ошибок, версионирование, условия использования и изменения API
+
+Важно: автор считает, что описанная в документации архитектура не претендует на эталон. Это учебный пример того, как документировать одну систему сразу в нескольких стилях API.
+
+Как устроено:
+1. Контракты в specs/ — OpenAPI 3.1, WSDL, OpenRPC, Protobuf, GraphQL SDL, AsyncAPI.
+2. Документация — Markdown/MDX в src/content/docs/
+3. Песочница sandbox/ — Node + Hono на 127.0.0.1:8787: REST, SOAP, JSON-RPC, GraphQL, WebSocket, store в памяти на ключ. (исключение -- gRPC)
+
+## Технический стек
+
+| Назначение | Инструмент | Зачем |
 | --- | --- | --- |
-| Site generator | [Astro](https://astro.build) + [Starlight](https://starlight.astro.build) | Static output, zero JS by default, sidebar/search/i18n/dark mode out of the box. |
-| REST reference | [Scalar](https://github.com/scalar/scalar) | Three-column layout, code samples, built-in "Test request" client. |
-| Spec quality gate | [Spectral](https://github.com/stoplightio/spectral) + `scripts/lint-specs.mjs` | REST OpenAPI is linted with Spectral. WSDL, OpenRPC, proto, GraphQL SDL and AsyncAPI are parsed and checked structurally in CI. |
-| Search | Pagefind (bundled with Starlight) | Static index, no external service. |
-| Hosting | GitHub Pages (production), Cloudflare Pages (PR previews) | Static, free, CDN-backed. See `.github/workflows/docs.yml`. |
-| Sandbox | `npm run sandbox` | In-memory server for REST, SOAP, JSON-RPC, GraphQL and WebSocket. gRPC stays contract-only (needs HTTP/2 + generated stubs). |
+| Сайт документации | [Astro](https://astro.build) + [Starlight](https://starlight.astro.build) | Статическая сборка, без JS по умолчанию; сразу есть сайдбар, поиск, i18n и тёмная тема. |
+| REST-справочник | [Scalar](https://github.com/scalar/scalar) | Три колонки, примеры кода, встроенный клиент Test request. |
+| Проверка контрактов | [Spectral](https://github.com/stoplightio/spectral) + `scripts/lint-specs.mjs` | OpenAPI линтится Spectral. WSDL, OpenRPC, proto, GraphQL SDL и AsyncAPI разбираются и проверяются структурно в CI. |
+| Поиск | Pagefind (входит в Starlight) | Статический индекс, без внешнего сервиса. |
+| Хостинг | GitHub Pages (продакшен), Cloudflare Pages (превью PR) | Статика, бесплатно, за CDN. См. `.github/workflows/docs.yml`. |
+| Песочница | `npm run sandbox` | Сервер в памяти для REST, SOAP, JSON-RPC, GraphQL и WebSocket. gRPC остаётся только контрактом (нужны HTTP/2 и сгенерированные stubs). |
 
-## Layout
+## Архитектура
 
 ```
 specs/
@@ -43,7 +57,7 @@ astro.config.mjs                 # sidebar + redirects from old REST URLs
 .github/workflows/docs.yml
 ```
 
-## Local development
+## Локальная песочница
 
 ```bash
 npm install
@@ -54,28 +68,10 @@ npm run build        # lint + static build into dist/
 npm run preview      # serve dist/
 ```
 
-Any `Authorization: Bearer ak_test_…` key works against the local sandbox. Each key gets its own isolated in-memory store. Production-shaped `ak_live_…` keys are rejected.
+С локальной песочницей работает любой ключ формата `Authorization: Bearer ak_test_…`. Для каждого ключа создается отдельное изолированное хранилище в оперативной памяти. Ключи формата `ak_live_…` (предназначенные для продакшена) отклоняются.
 
-In the [REST Scalar reference](http://localhost:4321/reference/rest/v1/) pick the **Local sandbox** server, then use **Test request**.
+В [справочнике по REST API](http://localhost:4321/reference/rest/v1/) выберите сервер **Local sandbox**, а затем воспользуйтесь функцией **Test request**.
 
-## Adding or changing a REST endpoint
+### Тестовый запрос и CORS
 
-1. Edit `specs/rest/v1/openapi.yaml`. Every operation needs `operationId`, `summary`, `description`, a tag, a documented `401`, and `application/problem+json` for all `4xx` responses; `POST`/`PUT`/`PATCH` bodies need an `examples` entry.
-2. Mirror the change in the other style contracts under `specs/` and in `sandbox/` if behaviour is affected.
-3. Run `npm run lint:specs` — fix anything it reports.
-4. If the change affects behaviour, update a guide under `src/content/docs/rest/` and add an entry to `src/content/docs/changelog.md`.
-5. Open a PR. CI lints, builds and (once configured) posts a preview URL.
-
-Old REST URLs (`/reference/v1/`, `/openapi/v1.yaml`, `/guides/…`, `/getting-started/quickstart/`) redirect to the new paths.
-
-## Deployment
-
-The same build runs in two layouts; `ASTRO_SITE` / `ASTRO_BASE` control the origin and sub-path.
-
-- **GitHub Pages (production).** One-time: *Settings → Pages → Source: GitHub Actions*. Every push to `main` deploys to `https://<owner>.github.io/APIculture/`.
-- **Cloudflare Pages (PR previews).** One-time: create a Pages project (direct upload), then set repository variable `CF_PAGES_PROJECT` and secrets `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`. Until the variable exists the preview job is skipped.
-- **Custom domain.** Point the domain at either host and set `ASTRO_SITE=https://docs.example.com`, `ASTRO_BASE=/` in the workflow.
-
-### "Test request" and CORS
-
-The local sandbox sends `Access-Control-Allow-Origin: *`, so Scalar talks to it directly (no proxy). A hosted production API should allow the docs origin the same way. The fictional `*.apiculture.example` hosts in the contracts are documentation defaults, not live services.
+Локальная песочница (sandbox) отправляет заголовок `Access-Control-Allow-Origin:`, поэтому Scalar взаимодействует с ней напрямую (без прокси). API, развернутый в рабочей среде, должен аналогичным образом разрешать доступ с домена, на котором размещена документация. Указанные в контрактах вымышленные хосты вида `.apiculture.example` — это лишь значения по умолчанию для документации, а не реально работающие сервисы.

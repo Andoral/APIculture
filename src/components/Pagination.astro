@@ -1,0 +1,114 @@
+---
+import { Icon } from '@astrojs/starlight/components';
+
+type SidebarLink = { type: 'link'; href: string; label: string; isCurrent: boolean };
+type SidebarEntry = SidebarLink | { type: 'group'; label: string; entries: SidebarEntry[] };
+
+const { dir, pagination, sidebar } = Astro.locals.starlightRoute;
+const { prev, next } = pagination;
+const isRtl = dir === 'rtl';
+
+function findCurrentHref(entries: SidebarEntry[]): string | undefined {
+	for (const entry of entries) {
+		if (entry.type === 'link' && entry.isCurrent) return entry.href;
+		if (entry.type === 'group') {
+			const nested = findCurrentHref(entry.entries);
+			if (nested) return nested;
+		}
+	}
+	return undefined;
+}
+
+function groupContainsHref(entry: SidebarEntry, href: string): boolean {
+	if (entry.type === 'link') return entry.href === href;
+	return entry.entries.some((child: SidebarEntry) => groupContainsHref(child, href));
+}
+
+function topGroupLabel(href: string | undefined): string | undefined {
+	if (!href) return undefined;
+	for (const entry of sidebar) {
+		if (entry.type === 'group' && groupContainsHref(entry, href)) return entry.label;
+	}
+	return undefined;
+}
+
+function navLabel(link: SidebarLink, currentGroup: string | undefined): string {
+	const group = topGroupLabel(link.href);
+	if (group && group !== currentGroup) return `${group} ${link.label}`;
+	return link.label;
+}
+
+const currentGroup = topGroupLabel(findCurrentHref(sidebar));
+---
+
+<div class="pagination-links print:hidden" dir={dir}>
+	{
+		prev && (
+			<a href={prev.href} rel="prev">
+				<Icon name={isRtl ? 'right-arrow' : 'left-arrow'} size="1.5rem" />
+				<span>
+					{Astro.locals.t('page.previousLink')}
+					<br />
+					<span class="link-title">{navLabel(prev, currentGroup)}</span>
+				</span>
+			</a>
+		)
+	}
+	{
+		next && (
+			<a href={next.href} rel="next">
+				<Icon name={isRtl ? 'left-arrow' : 'right-arrow'} size="1.5rem" />
+				<span>
+					{Astro.locals.t('page.nextLink')}
+					<br />
+					<span class="link-title">{navLabel(next, currentGroup)}</span>
+				</span>
+			</a>
+		)
+	}
+</div>
+
+<style>
+	@layer starlight.core {
+		.pagination-links {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+			gap: 1rem;
+		}
+
+		a {
+			display: flex;
+			align-items: center;
+			justify-content: flex-start;
+			gap: 0.5rem;
+			width: 100%;
+			flex-basis: calc(50% - 0.5rem);
+			flex-grow: 1;
+			border: 1px solid var(--sl-color-gray-5);
+			border-radius: 0.5rem;
+			padding: 1rem;
+			text-decoration: none;
+			color: var(--sl-color-gray-2);
+			box-shadow: var(--sl-shadow-md);
+			overflow-wrap: anywhere;
+		}
+		[rel='next'] {
+			justify-content: end;
+			text-align: end;
+			flex-direction: row-reverse;
+		}
+		a:hover {
+			border-color: var(--sl-color-gray-2);
+		}
+
+		.link-title {
+			color: var(--sl-color-white);
+			font-size: var(--sl-text-2xl);
+			line-height: var(--sl-line-height-headings);
+		}
+
+		svg {
+			flex-shrink: 0;
+		}
+	}
+</style>

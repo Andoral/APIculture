@@ -25,7 +25,7 @@ info:
   license:
     name: Apache 2.0
     identifier: Apache-2.0
-  termsOfService: https://apiculture.example/terms
+  termsOfService: https://andoral.github.io/APIculture/resources/terms/
 
 servers:
   # Local sandbox is first so Scalar "Test request" hits a live process when

@@ -30,3 +30,9 @@
 :root[data-theme='light'] nav.sidebar a[aria-current='page']:hover {
 	background-color: #e8b800;
 }
+
+/* Keep a scrollbar gutter so opening search does not shift the layout. */
+html {
+	scrollbar-gutter: stable;
+	overflow-y: scroll;
+}
